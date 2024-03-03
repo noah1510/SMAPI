@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using Pathoschild.Http.Client;
+using StardewModdingAPI.Toolkit;
 using StardewModdingAPI.Toolkit.Framework.UpdateData;
 using StardewModdingAPI.Web.Framework.Clients.ModDrop.ResponseModels;
 
@@ -73,8 +74,30 @@ namespace StardewModdingAPI.Web.Framework.Clients.ModDrop
                 if (file.IsOld || file.IsDeleted || file.IsHidden)
                     continue;
 
+                // ModDrop drops the version prerelease tag if it's not in their whitelist of allowed suffixes. For
+                // example, "1.0.0-alpha" is fine but "1.0.0-sdvalpha" will have version field "1.0.0".
+                //
+                // If the version is non-prerelease but the file's display name contains a prerelease version, parse it
+                // out of the name instead.
+                string version = file.Version;
+                if (file.Name.Contains(version + "-") && SemanticVersion.TryParse(version, out ISemanticVersion? parsedVersion) && !parsedVersion.IsPrerelease())
+                {
+                    string[] parts = file.Name.Split(' ');
+                    if (parts.Length == 1)
+                        continue; // can't safely parse name without spaces (e.g. "mod-1.0.0-release" may not be version 1.0.0-release)
+
+                    foreach (string part in parts)
+                    {
+                        if (part.StartsWith(version + "-") && SemanticVersion.TryParse(part, out parsedVersion))
+                        {
+                            version = parsedVersion.ToString();
+                            break;
+                        }
+                    }
+                }
+
                 downloads.Add(
-                    new GenericModDownload(file.Name, file.Description, file.Version)
+                    new GenericModDownload(file.Name, file.Description, version)
                 );
             }
 

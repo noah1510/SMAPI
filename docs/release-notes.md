@@ -23,6 +23,7 @@
 
 * For the web UI:
   * Fixed uploaded log/JSON file expiry alway shown as renewed.
+  * Fixed update check for mods with a prerelease version tag not recognized by the ModDrop API. SMAPI now parses the version itself if needed.
 
 ## 3.18.6
 Released 05 October 2023 for Stardew Valley 1.5.6 or later.
