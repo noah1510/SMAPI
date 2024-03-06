@@ -16,12 +16,6 @@ namespace StardewModdingAPI.Framework.ModLoading.Rewriters.StardewValley_1_6
         /*********
         ** Accessors
         *********/
-        public new int waterCanMax
-        {
-            get => base.waterCanMax.Value;
-            set => base.waterCanMax.Value = value;
-        }
-
         public int waterLeft
         {
             get => base.WaterLeft;
