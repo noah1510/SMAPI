@@ -95,7 +95,11 @@ namespace StardewModdingAPI.Metadata
 
                     foreach (IAssetName assetName in textureAssets)
                     {
-                        bool changed = this.PropagateTexture(assetName, assetName.LanguageCode ?? defaultLanguage, contentManagers, ignoreWorld);
+                        var language = assetName.LanguageCode ?? defaultLanguage;
+                        if (language == LocalizedContentManager.LanguageCode.mod && LocalizedContentManager.CurrentModLanguage is null)
+                            language = defaultLanguage;
+
+                        bool changed = this.PropagateTexture(assetName, language, contentManagers, ignoreWorld);
                         if (changed)
                             propagatedAssets[assetName] = true;
                     }
