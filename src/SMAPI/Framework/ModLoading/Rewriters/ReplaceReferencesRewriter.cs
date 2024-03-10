@@ -22,6 +22,13 @@ namespace StardewModdingAPI.Framework.ModLoading.Rewriters
     ///   </para>
     ///
     ///   <para>
+    ///     By default, matching members will always be rewritten. For example, this lets you map behavior changes even
+    ///     if the member reference could still be resolved. You can override that by adding
+    ///     <see cref="OnlyIfNotResolvedAttribute"/> to the facade member (or setting the equivalent argument when
+    ///     using the mapping methods).
+    ///   </para>
+    ///
+    ///   <para>
     ///     To auto-map members to a facade type:
     ///     <list type="bullet">
     ///       <item>
@@ -44,7 +51,8 @@ namespace StardewModdingAPI.Framework.ModLoading.Rewriters
     ///   <para>
     ///     When adding a facade for a type with a required constructor, you'll need a constructor on the facade type.
     ///     This should be private and will never be called (unless you want to rewrite references to the original
-    ///     constructors per the above).
+    ///     constructors per the above). You can call <see cref="RewriteHelper.ThrowFakeConstructorCalled"/> in the
+    ///     private constructor to enforce that facades aren't constructed manually.
     ///   </para>
     /// </remarks>
     internal class ReplaceReferencesRewriter : BaseInstructionHandler
@@ -56,7 +64,7 @@ namespace StardewModdingAPI.Framework.ModLoading.Rewriters
         private readonly Dictionary<string, Type> TypeMap = new();
 
         /// <summary>The new members to reference, indexed by the old member's full name.</summary>
-        private readonly Dictionary<string, MemberInfo> MemberMap = new();
+        private readonly Dictionary<string, MappedMember> MemberMap = new();
 
 
         /*********
@@ -91,7 +99,8 @@ namespace StardewModdingAPI.Framework.ModLoading.Rewriters
         /// <param name="fromFullName">The full field name, like <c>Microsoft.Xna.Framework.Vector2 StardewValley.Character::Tile</c>.</param>
         /// <param name="toType">The new type which will have the field.</param>
         /// <param name="toName">The new field name to reference.</param>
-        public ReplaceReferencesRewriter MapField(string fromFullName, Type toType, string toName)
+        /// <param name="onlyIfNotResolved"><inheritdoc cref="MappedMember.OnlyIfNotResolved" path="/summary" /></param>
+        public ReplaceReferencesRewriter MapField(string fromFullName, Type toType, string toName, bool onlyIfNotResolved = false)
         {
             // validate parameters
             if (string.IsNullOrWhiteSpace(fromFullName))
@@ -115,14 +124,15 @@ namespace StardewModdingAPI.Framework.ModLoading.Rewriters
                 throw new InvalidOperationException($"Required field {toType.FullName}::{toName} could not be found.");
 
             // add mapping
-            return this.MapMember(fromFullName, toField, "field");
+            return this.MapMember(fromFullName, toField, "field", onlyIfNotResolved);
         }
 
         /// <summary>Rewrite field references to point to another field with the field and parent type.</summary>
         /// <param name="type">The type which has the old and new fields.</param>
         /// <param name="fromName">The field name.</param>
         /// <param name="toName">The new field name to reference.</param>
-        public ReplaceReferencesRewriter MapFieldName(Type type, string fromName, string toName)
+        /// <param name="onlyIfNotResolved"><inheritdoc cref="MappedMember.OnlyIfNotResolved" path="/summary" /></param>
+        public ReplaceReferencesRewriter MapFieldName(Type type, string fromName, string toName, bool onlyIfNotResolved = false)
         {
             // validate parameters
             if (type is null)
@@ -147,14 +157,15 @@ namespace StardewModdingAPI.Framework.ModLoading.Rewriters
 
             // add mapping
             string fromFullName = $"{this.FormatCecilType(toField.FieldType)} {this.FormatCecilType(type)}::{fromName}";
-            return this.MapMember(fromFullName, toField, "field");
+            return this.MapMember(fromFullName, toField, "field", onlyIfNotResolved);
         }
 
         /// <summary>Rewrite field references to point to a property with the same return type.</summary>
         /// <param name="fromFullName">The full field name, like <c>Microsoft.Xna.Framework.Vector2 StardewValley.Character::Tile</c>.</param>
         /// <param name="toType">The new type which will have the field.</param>
         /// <param name="toName">The new field name to reference.</param>
-        public ReplaceReferencesRewriter MapFieldToProperty(string fromFullName, Type toType, string toName)
+        /// <param name="onlyIfNotResolved"><inheritdoc cref="MappedMember.OnlyIfNotResolved" path="/summary" /></param>
+        public ReplaceReferencesRewriter MapFieldToProperty(string fromFullName, Type toType, string toName, bool onlyIfNotResolved = false)
         {
             // validate parameters
             if (string.IsNullOrWhiteSpace(fromFullName))
@@ -178,7 +189,8 @@ namespace StardewModdingAPI.Framework.ModLoading.Rewriters
                 throw new InvalidOperationException($"Required property {toType.FullName}::{toName} could not be found.");
 
             // add mapping
-            return this.MapMember(fromFullName, toProperty, "field-to-property");
+            onlyIfNotResolved = onlyIfNotResolved || toProperty.GetCustomAttribute<OnlyIfNotResolvedAttribute>() is not null;
+            return this.MapMember(fromFullName, toProperty, "field-to-property", onlyIfNotResolved);
         }
 
         /// <summary>Rewrite method references to point to another method with the same signature.</summary>
@@ -186,7 +198,8 @@ namespace StardewModdingAPI.Framework.ModLoading.Rewriters
         /// <param name="toType">The new type which will have the method.</param>
         /// <param name="toName">The new method name to reference.</param>
         /// <param name="parameterTypes">The method's parameter types to disambiguate between overloads, if needed.</param>
-        public ReplaceReferencesRewriter MapMethod(string fromFullName, Type toType, string toName, Type[]? parameterTypes = null)
+        /// <param name="onlyIfNotResolved"><inheritdoc cref="MappedMember.OnlyIfNotResolved" path="/summary" /></param>
+        public ReplaceReferencesRewriter MapMethod(string fromFullName, Type toType, string toName, Type[]? parameterTypes = null, bool onlyIfNotResolved = false)
         {
             // validate parameters
             if (string.IsNullOrWhiteSpace(fromFullName))
@@ -200,7 +213,7 @@ namespace StardewModdingAPI.Framework.ModLoading.Rewriters
             MethodInfo? method;
             try
             {
-                method = parameterTypes != null
+                method = parameterTypes is not null
                     ? toType.GetMethod(toName, parameterTypes)
                     : toType.GetMethod(toName);
             }
@@ -212,7 +225,8 @@ namespace StardewModdingAPI.Framework.ModLoading.Rewriters
                 throw new InvalidOperationException($"Required method {toType.FullName}::{toName} could not be found.");
 
             // add mapping
-            return this.MapMember(fromFullName, method, "method");
+            onlyIfNotResolved = onlyIfNotResolved || method.GetCustomAttribute<OnlyIfNotResolvedAttribute>() is not null;
+            return this.MapMember(fromFullName, method, "method", onlyIfNotResolved);
         }
 
         /// <summary>Rewrite field, property, constructor, and method references to point to a matching equivalent on another class.</summary>
@@ -238,19 +252,20 @@ namespace StardewModdingAPI.Framework.ModLoading.Rewriters
             foreach (PropertyInfo property in toType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static | BindingFlags.DeclaredOnly))
             {
                 string propertyType = this.FormatCecilType(property.PropertyType);
+                bool onlyIfNotResolved = property.GetCustomAttribute<OnlyIfNotResolvedAttribute>() is not null;
 
                 // add getter
                 MethodInfo? get = property.GetMethod;
-                if (get != null)
-                    this.MapMember($"{propertyType} {fromTypeName}::get_{property.Name}()", get, "method");
+                if (get is not null)
+                    this.MapMember($"{propertyType} {fromTypeName}::get_{property.Name}()", get, "method", onlyIfNotResolved);
 
                 // add setter
                 MethodInfo? set = property.SetMethod;
-                if (set != null)
-                    this.MapMember($"System.Void {fromTypeName}::set_{property.Name}({propertyType})", set, "method");
+                if (set is not null)
+                    this.MapMember($"System.Void {fromTypeName}::set_{property.Name}({propertyType})", set, "method", onlyIfNotResolved);
 
                 // add field => property
-                this.MapMember($"{propertyType} {fromTypeName}::{property.Name}", property, "field-to-property");
+                this.MapMember($"{propertyType} {fromTypeName}::{property.Name}", property, "field-to-property", onlyIfNotResolved);
             }
 
             // methods
@@ -259,17 +274,19 @@ namespace StardewModdingAPI.Framework.ModLoading.Rewriters
                 if (method.Name.StartsWith("get_") || method.Name.StartsWith("set_"))
                     continue; // handled via properties above
 
+                bool onlyIfNotResolved = method.GetCustomAttribute<OnlyIfNotResolvedAttribute>() is not null;
+
                 // map method
                 {
                     string fromFullName = $"{this.FormatCecilType(method.ReturnType)} {fromTypeName}::{method.Name}({this.FormatCecilParameterList(method.GetParameters())})";
-                    this.MapMember(fromFullName, method, "method");
+                    this.MapMember(fromFullName, method, "method", onlyIfNotResolved);
                 }
 
                 // map constructor to static methods
                 if (method.IsStatic && method.Name == "Constructor")
                 {
                     string fromFullName = $"System.Void {fromTypeName}::.ctor({this.FormatCecilParameterList(method.GetParameters())})";
-                    this.MapMember(fromFullName, method, "method");
+                    this.MapMember(fromFullName, method, "method", onlyIfNotResolved);
                 }
             }
 
@@ -283,7 +300,9 @@ namespace StardewModdingAPI.Framework.ModLoading.Rewriters
                 if (!mapDefaultConstructor && parameters.Length == 0)
                     continue;
 
-                this.MapMember(fromFullName, constructor, "constructor");
+                bool onlyIfNotResolved = constructor.GetCustomAttribute<OnlyIfNotResolvedAttribute>() is not null;
+
+                this.MapMember(fromFullName, constructor, "constructor", onlyIfNotResolved);
             }
 
             return this;
@@ -313,7 +332,7 @@ namespace StardewModdingAPI.Framework.ModLoading.Rewriters
                 return false;
 
             // get target member
-            if (!this.MemberMap.TryGetValue(fromMember.FullName, out MemberInfo? toMember))
+            if (!this.MemberMap.TryGetValue(fromMember.FullName, out MappedMember? mapData))
             {
                 // If this is a generic type, there's two cases where the above might not match:
                 //   1. we mapped an open generic type like "Netcode.NetFieldBase`2::op_Implicit" without specific
@@ -325,12 +344,16 @@ namespace StardewModdingAPI.Framework.ModLoading.Rewriters
                 // "Netcode.NetFieldBase`2" (without type args) by using `GetElementType().FullName` instead.
                 if (fromMember.DeclaringType is not GenericInstanceType)
                     return false;
-                if (!this.MemberMap.TryGetValue($"{fromMember.DeclaringType.GetElementType().FullName}::{fromMember.Name}", out toMember))
+                if (!this.MemberMap.TryGetValue($"{fromMember.DeclaringType.GetElementType().FullName}::{fromMember.Name}", out mapData))
                     return false;
             }
 
+            // apply options
+            if (mapData.OnlyIfNotResolved && fromMember.Resolve() is not null)
+                return false;
+
             // apply
-            switch (toMember)
+            switch (mapData.Member)
             {
                 // constructor
                 case ConstructorInfo toConstructor:
@@ -379,7 +402,7 @@ namespace StardewModdingAPI.Framework.ModLoading.Rewriters
                         else if (instruction.OpCode == OpCodes.Stfld || instruction.OpCode == OpCodes.Stsfld)
                             toPropMethod = toProperty.SetMethod;
 
-                        if (toPropMethod != null)
+                        if (toPropMethod is not null)
                         {
                             instruction.OpCode = OpCodes.Call;
                             instruction.Operand = module.ImportReference(toPropMethod);
@@ -400,7 +423,8 @@ namespace StardewModdingAPI.Framework.ModLoading.Rewriters
         /// <param name="fromFullName">The full member name, like <c>Microsoft.Xna.Framework.Vector2 StardewValley.Character::getTileLocation()</c>.</param>
         /// <param name="toMember">The new member to reference.</param>
         /// <param name="typeLabel">A human-readable label for the reference type, like 'field' or 'method'.</param>
-        private ReplaceReferencesRewriter MapMember(string fromFullName, MemberInfo toMember, string typeLabel)
+        /// <param name="onlyIfNotResolved"><inheritdoc cref="MappedMember.OnlyIfNotResolved" path="/summary" /></param>
+        private ReplaceReferencesRewriter MapMember(string fromFullName, MemberInfo toMember, string typeLabel, bool onlyIfNotResolved)
         {
             // validate parameters
             if (string.IsNullOrWhiteSpace(fromFullName))
@@ -409,7 +433,7 @@ namespace StardewModdingAPI.Framework.ModLoading.Rewriters
                 throw new InvalidOperationException($"The replacement {typeLabel} for '{fromFullName}' can't be null.");
 
             // add mapping
-            if (!this.MemberMap.TryAdd(fromFullName, toMember))
+            if (!this.MemberMap.TryAdd(fromFullName, new MappedMember(toMember, onlyIfNotResolved)))
                 throw new InvalidOperationException($"The '{fromFullName}' {typeLabel} is already mapped.");
 
             return this;
