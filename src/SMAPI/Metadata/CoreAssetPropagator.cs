@@ -379,6 +379,10 @@ namespace StardewModdingAPI.Metadata
                     ItemRegistry.ResetCache();
                     return true;
 
+                case "data/jukeboxtracks": // Game1.LoadContent
+                    Game1.jukeboxTrackData = DataLoader.JukeboxTracks(content);
+                    return true;
+
                 case "data/locationcontexts": // Game1.LoadContent
                     Game1.locationContextData = DataLoader.LocationContexts(content);
                     return true;
