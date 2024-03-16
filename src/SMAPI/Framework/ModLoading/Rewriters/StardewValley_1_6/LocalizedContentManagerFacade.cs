@@ -14,7 +14,6 @@ namespace StardewModdingAPI.Framework.ModLoading.Rewriters.StardewValley_1_6
         /*********
         ** Public methods
         *********/
-        [OnlyIfNotResolved] // the only change is instance->static, so don't rewrite references that are already correct to avoid 'invalid program' errors
         public new string LanguageCodeString(LanguageCode code)
         {
             return LocalizedContentManager.LanguageCodeString(code);
