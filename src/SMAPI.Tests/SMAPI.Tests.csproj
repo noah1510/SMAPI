@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
   </PropertyGroup>
 
   <Import Project="..\..\build\common.targets" />
@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <Reference Include="Stardew Valley" HintPath="$(GamePath)\Stardew Valley.dll" Private="True" />
+    <Reference Include="StardewValley.GameData" HintPath="$(GamePath)\StardewValley.GameData.dll" Private="True" />
   </ItemGroup>
 
   <ItemGroup>

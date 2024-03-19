@@ -1,11 +1,35 @@
 ← [README](README.md)
 
 # Release notes
-<!--
 ## 4.0.0
-* The installer no longer supports updating from SMAPI 2.11.3 or earlier (released in 2019).  
-  _If needed, you can update to SMAPI 3.16.0 first and then install the latest version._
--->
+Released 19 March 2024 for Stardew Valley 1.6.0 or later. See [release highlights](https://www.patreon.com/posts/100388693).
+
+* For players:
+  * Updated for Stardew Valley 1.6.
+  * Added support for overriding SMAPI configuration per `Mods` folder (thanks to Shockah!).
+  * Improved performance.
+  * Improved compatibility rewriting to handle more cases (thanks to SinZ for his contributions!).
+  * Removed the bundled `ErrorHandler` mod, which is now integrated into Stardew Valley 1.6.
+  * Removed obsolete console commands: `list_item_types` (no longer needed) and `player_setimmunity` (broke in 1.6 and rarely used).
+  * Removed support for seamlessly updating from SMAPI 2.11.3 and earlier (released in 2019).  
+    _If needed, you can update to SMAPI 3.18.0 first and then install the latest version._
+
+* For mod authors:
+  * Updated to .NET 6.
+  * Added [`RenderingStep` and `RenderedStep` events](https://stardewvalleywiki.com/Modding:Modder_Guide/APIs/Events#Display.RenderingStep), which let you handle a specific step in the game's render cycle.
+  * Added support for [custom update manifests](https://stardewvalleywiki.com/Modding:Modder_Guide/APIs/Update_checks#Custom_update_manifest) (thanks to Jamie Taylor!).
+  * Removed all deprecated APIs.
+  * SMAPI no longer intercepts output written to the console. Mods which directly access `Console` will be listed under mod warnings.
+  * Calling `Monitor.VerboseLog` with an interpolated string no longer evaluates the string if verbose mode is disabled (thanks to atravita!). This only applies to mods compiled in SMAPI 4.0.0 or later.
+  * Fixed redundant `TRACE` logs for a broken mod which references members with the wrong types.
+
+* For the web UI:
+  * Updated JSON validator for Content Patcher 2.0.0.
+  * Fixed uploaded log/JSON file expiry alway shown as renewed.
+  * Fixed update check for mods with a prerelease version tag not recognized by the ModDrop API. SMAPI now parses the version itself if needed.
+
+* For SMAPI developers:
+  * Added `LogTechnicalDetailsForBrokenMods` option in `smapi-internal/config.json`, which adds more technical info to the SMAPI log when a mod is broken. This is mainly useful for creating compatibility rewriters.
 
 ## 3.18.6
 Released 05 October 2023 for Stardew Valley 1.5.6 or later.

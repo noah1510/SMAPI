@@ -5,12 +5,12 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
-using System.Runtime.ExceptionServices;
 using System.Security;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 #if SMAPI_FOR_WINDOWS
 using Microsoft.Win32;
 #endif
@@ -31,14 +31,9 @@ using StardewModdingAPI.Framework.Networking;
 using StardewModdingAPI.Framework.Reflection;
 using StardewModdingAPI.Framework.Rendering;
 using StardewModdingAPI.Framework.Serialization;
-#if SMAPI_DEPRECATED
-using StardewModdingAPI.Framework.StateTracking.Comparers;
-#endif
 using StardewModdingAPI.Framework.StateTracking.Snapshots;
 using StardewModdingAPI.Framework.Utilities;
 using StardewModdingAPI.Internal;
-using StardewModdingAPI.Internal.Patching;
-using StardewModdingAPI.Patches;
 using StardewModdingAPI.Toolkit;
 using StardewModdingAPI.Toolkit.Framework.Clients.WebApi;
 using StardewModdingAPI.Toolkit.Framework.ModData;
@@ -48,13 +43,13 @@ using StardewModdingAPI.Toolkit.Utilities.PathLookups;
 using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.Menus;
+using StardewValley.Mods;
 using StardewValley.Objects;
 using StardewValley.SDKs;
 using xTile.Display;
 using LanguageCode = StardewValley.LocalizedContentManager.LanguageCode;
 using MiniMonoModHotfix = MonoMod.Utils.MiniMonoModHotfix;
 using PathUtilities = StardewModdingAPI.Toolkit.Utilities.PathUtilities;
-using SObject = StardewValley.Object;
 
 namespace StardewModdingAPI.Framework
 {
@@ -144,16 +139,15 @@ namespace StardewModdingAPI.Framework
         /// <summary>The maximum number of consecutive attempts SMAPI should make to recover from an update error.</summary>
         private readonly Countdown UpdateCrashTimer = new(60); // 60 ticks = roughly one second
 
-#if SMAPI_DEPRECATED
-        /// <summary>Asset interceptors added or removed since the last tick.</summary>
-        private readonly List<AssetInterceptorChange> ReloadAssetInterceptorsQueue = new();
-#endif
-
         /// <summary>A list of queued commands to parse and execute.</summary>
         private readonly CommandQueue RawCommandQueue = new();
 
         /// <summary>A list of commands to execute on each screen.</summary>
         private readonly PerScreen<List<QueuedCommand>> ScreenCommandQueue = new(() => new List<QueuedCommand>());
+
+        /// <summary>The last <see cref="ProcessTicksElapsed"/> for which display events were raised.</summary>
+        private readonly PerScreen<uint> LastRenderEventTick = new();
+
 
         /*********
         ** Accessors
@@ -163,7 +157,7 @@ namespace StardewModdingAPI.Framework
         internal static DeprecationManager DeprecationManager { get; private set; } = null!; // initialized in constructor, which happens before other code can access it
 
         /// <summary>The singleton instance.</summary>
-        /// <remarks>This is only intended for use by external code like the Error Handler mod.</remarks>
+        /// <remarks>This is only intended for use by external code.</remarks>
         internal static SCore Instance { get; private set; } = null!; // initialized in constructor, which happens before other code can access it
 
         /// <summary>The number of game update ticks which have already executed. This is similar to <see cref="Game1.ticks"/>, but incremented more consistently for every tick.</summary>
@@ -200,6 +194,8 @@ namespace StardewModdingAPI.Framework
                 this.Settings = JsonConvert.DeserializeObject<SConfig>(File.ReadAllText(Constants.ApiConfigPath)) ?? throw new InvalidOperationException("The 'smapi-internal/config.json' file is missing or invalid. You can reinstall SMAPI to fix this.");
                 if (File.Exists(Constants.ApiUserConfigPath))
                     JsonConvert.PopulateObject(File.ReadAllText(Constants.ApiUserConfigPath), this.Settings, deserializerSettings);
+                if (File.Exists(Constants.ApiModGroupConfigPath))
+                    JsonConvert.PopulateObject(File.ReadAllText(Constants.ApiModGroupConfigPath), this.Settings, deserializerSettings);
                 if (developerMode.HasValue)
                     this.Settings.OverrideDeveloperMode(developerMode.Value);
             }
@@ -231,7 +227,7 @@ namespace StardewModdingAPI.Framework
         }
 
         /// <summary>Launch SMAPI.</summary>
-        [HandleProcessCorruptedStateExceptions, SecurityCritical] // let try..catch handle corrupted state exceptions
+        [SecurityCritical]
         public void RunInteractively()
         {
             // initialize SMAPI
@@ -257,33 +253,34 @@ namespace StardewModdingAPI.Framework
                 LocalizedContentManager.OnLanguageChange += _ => this.OnLocaleChanged();
 
                 // override game
-                this.Multiplayer = new SMultiplayer(this.Monitor, this.EventManager, this.Toolkit.JsonHelper, this.ModRegistry, this.Reflection, this.OnModMessageReceived, this.Settings.LogNetworkTraffic);
+                this.Multiplayer = new SMultiplayer(this.Monitor, this.EventManager, this.Toolkit.JsonHelper, this.ModRegistry, this.OnModMessageReceived, this.Settings.LogNetworkTraffic);
                 SGame.CreateContentManagerImpl = this.CreateContentManager; // must be static since the game accesses it before the SGame constructor is called
                 this.Game = new SGameRunner(
                     monitor: this.Monitor,
                     reflection: this.Reflection,
-                    eventManager: this.EventManager,
                     modHooks: new SModHooks(
                         parent: new ModHooks(),
                         beforeNewDayAfterFade: this.OnNewDayAfterFade,
+                        onStageChanged: this.OnLoadStageChanged,
+                        onRenderingStep: this.OnRenderingStep,
+                        onRenderedStep: this.OnRenderedStep,
                         monitor: this.Monitor
                     ),
+                    gameLogger: new SGameLogger(this.GetMonitorForGame()),
                     multiplayer: this.Multiplayer,
                     exitGameImmediately: this.ExitGameImmediately,
 
                     onGameContentLoaded: this.OnInstanceContentLoaded,
+                    onLoadStageChanged: this.OnLoadStageChanged,
                     onGameUpdating: this.OnGameUpdating,
                     onPlayerInstanceUpdating: this.OnPlayerInstanceUpdating,
+                    onPlayerInstanceRendered: this.OnRendered,
                     onGameExiting: this.OnGameExiting
                 );
-                StardewValley.GameRunner.instance = this.Game;
+                GameRunner.instance = this.Game;
 
-                // apply game patches
+                // fix Harmony for mods
                 MiniMonoModHotfix.Apply();
-                HarmonyPatcher.Apply("SMAPI", this.Monitor,
-                    new Game1Patcher(this.Reflection, this.OnLoadStageChanged),
-                    new TitleMenuPatcher(this.OnLoadStageChanged)
-                );
 
                 // set window titles
                 this.UpdateWindowTitles();
@@ -320,7 +317,6 @@ namespace StardewModdingAPI.Framework
         }
 
         /// <summary>Get the core logger and monitor on behalf of the game.</summary>
-        /// <remarks>This method is called using reflection by the ErrorHandler mod to log game errors.</remarks>
         [SuppressMessage("ReSharper", "UnusedMember.Global", Justification = "Used via reflection")]
         public IMonitor GetMonitorForGame()
         {
@@ -472,10 +468,6 @@ namespace StardewModdingAPI.Framework
         /// <summary>Raised after the game finishes initializing.</summary>
         private void OnGameInitialized()
         {
-            // validate XNB integrity
-            if (!this.ValidateContentIntegrity())
-                this.Monitor.Log("SMAPI found problems in your game's content files which are likely to cause errors or crashes. Consider uninstalling XNB mods or reinstalling the game.", LogLevel.Error);
-
             // start SMAPI console
             if (this.Settings.ListenForConsoleInput)
             {
@@ -543,41 +535,6 @@ namespace StardewModdingAPI.Framework
                     this.Monitor.LogOnce("A mod enabled Harmony debug mode, which impacts performance and creates a file on your desktop. SMAPI will try to keep it disabled. (You can allow debug mode by editing the smapi-internal/config.json file.)", LogLevel.Warn);
                 }
 
-#if SMAPI_DEPRECATED
-                /*********
-                ** Reload assets when interceptors are added/removed
-                *********/
-                if (this.ReloadAssetInterceptorsQueue.Any())
-                {
-                    // get unique interceptors
-                    AssetInterceptorChange[] interceptors = this.ReloadAssetInterceptorsQueue
-                        .GroupBy(p => p.Instance, new ObjectReferenceComparer<object>())
-                        .Select(p => p.First())
-                        .ToArray();
-                    this.ReloadAssetInterceptorsQueue.Clear();
-
-                    // log summary
-                    this.Monitor.Log("Invalidating cached assets for new editors & loaders...");
-                    this.Monitor.Log(
-                        "   changed: "
-                        + string.Join(", ",
-                            interceptors
-                                .GroupBy(p => p.Mod)
-                                .OrderBy(p => p.Key.DisplayName)
-                                .Select(modGroup =>
-                                    $"{modGroup.Key.DisplayName} ("
-                                    + string.Join(", ", modGroup.GroupBy(p => p.WasAdded).ToDictionary(p => p.Key, p => p.Count()).Select(p => $"{(p.Key ? "added" : "removed")} {p.Value}"))
-                                    + ")"
-                                )
-                        )
-                        + "."
-                    );
-
-                    // reload affected assets
-                    this.ContentCore.InvalidateCache(asset => interceptors.Any(p => p.CanIntercept(asset)));
-                }
-#endif
-
                 /*********
                 ** Parse commands
                 *********/
@@ -594,7 +551,7 @@ namespace StardewModdingAPI.Framework
                         {
                             if (!this.CommandManager.TryParse(rawInput, out name, out args, out command, out screenId))
                             {
-                                this.Monitor.Log("Unknown command; type 'help' for a list of available commands.", LogLevel.Error);
+                                this.Monitor.Log($"Unknown command '{(!string.IsNullOrWhiteSpace(name) ? name : rawInput)}'; type 'help' for a list of available commands.", LogLevel.Error);
                                 continue;
                             }
                         }
@@ -701,7 +658,7 @@ namespace StardewModdingAPI.Framework
                 if (Game1.currentLoader != null)
                 {
                     this.Monitor.Log("Game loader synchronizing...");
-                    this.Reflection.GetMethod(Game1.game1, "UpdateTitleScreen").Invoke(Game1.currentGameTime); // run game logic to change music on load, etc
+                    Game1.game1.UpdateTitleScreen(Game1.currentGameTime); // run game logic to change music on load, etc
                     // ReSharper disable once ConstantConditionalAccessQualifier -- may become null within the loop
                     while (Game1.currentLoader?.MoveNext() == true)
                     {
@@ -1229,6 +1186,133 @@ namespace StardewModdingAPI.Framework
                 events.ReturnedToTitle.RaiseEmpty();
         }
 
+        /// <summary>Raised when the game starts a render step in the draw loop.</summary>
+        /// <param name="step">The render step being started.</param>
+        /// <param name="spriteBatch">The sprite batch being drawn (which might not always be open yet).</param>
+        /// <param name="renderTarget">The render target being drawn.</param>
+        private void OnRenderingStep(RenderSteps step, SpriteBatch spriteBatch, RenderTarget2D renderTarget)
+        {
+            EventManager events = this.EventManager;
+
+            // raise 'Rendering' before first event
+            if (this.LastRenderEventTick.Value != SCore.TicksElapsed)
+            {
+                this.RaiseRenderEvent(events.Rendering, spriteBatch, renderTarget);
+                this.LastRenderEventTick.Value = SCore.TicksElapsed;
+            }
+
+            // raise other events
+            switch (step)
+            {
+                case RenderSteps.World:
+                    this.RaiseRenderEvent(events.RenderingWorld, spriteBatch, renderTarget);
+                    break;
+
+                case RenderSteps.Menu:
+                    this.RaiseRenderEvent(events.RenderingActiveMenu, spriteBatch, renderTarget);
+                    break;
+
+                case RenderSteps.HUD:
+                    this.RaiseRenderEvent(events.RenderingHud, spriteBatch, renderTarget);
+                    break;
+            }
+
+            // raise generic rendering stage event
+            if (events.RenderingStep.HasListeners)
+                this.RaiseRenderEvent(events.RenderingStep, spriteBatch, renderTarget, RenderingStepEventArgs.Instance(step));
+        }
+
+        /// <summary>Raised when the game finishes a render step in the draw loop.</summary>
+        /// <param name="step">The render step being started.</param>
+        /// <param name="spriteBatch">The sprite batch being drawn (which might not always be open yet).</param>
+        /// <param name="renderTarget">The render target being drawn.</param>
+        private void OnRenderedStep(RenderSteps step, SpriteBatch spriteBatch, RenderTarget2D renderTarget)
+        {
+            var events = this.EventManager;
+
+            switch (step)
+            {
+                case RenderSteps.World:
+                    this.RaiseRenderEvent(events.RenderedWorld, spriteBatch, renderTarget);
+                    break;
+
+                case RenderSteps.Menu:
+                    this.RaiseRenderEvent(events.RenderedActiveMenu, spriteBatch, renderTarget);
+                    break;
+
+                case RenderSteps.HUD:
+                    this.RaiseRenderEvent(events.RenderedHud, spriteBatch, renderTarget);
+                    break;
+            }
+
+            // raise generic rendering stage event
+            if (events.RenderedStep.HasListeners)
+                this.RaiseRenderEvent(events.RenderedStep, spriteBatch, renderTarget, RenderedStepEventArgs.Instance(step));
+        }
+
+        /// <summary>Raised after an instance finishes a draw loop.</summary>
+        /// <param name="renderTarget">The render target being drawn to the screen.</param>
+        private void OnRendered(RenderTarget2D renderTarget)
+        {
+            this.RaiseRenderEvent(this.EventManager.Rendered, Game1.spriteBatch, renderTarget);
+        }
+
+        /// <summary>Raise a rendering/rendered event, temporarily opening the given sprite batch if needed to let mods draw to it.</summary>
+        /// <typeparam name="TEventArgs">The event args type to construct.</typeparam>
+        /// <param name="event">The event to raise.</param>
+        /// <param name="spriteBatch">The sprite batch being drawn to the screen.</param>
+        /// <param name="renderTarget">The render target being drawn to the screen.</param>
+        private void RaiseRenderEvent<TEventArgs>(ManagedEvent<TEventArgs> @event, SpriteBatch spriteBatch, RenderTarget2D renderTarget)
+            where TEventArgs : EventArgs, new()
+        {
+            this.RaiseRenderEvent(@event, spriteBatch, renderTarget, Singleton<TEventArgs>.Instance);
+        }
+
+        /// <summary>Raise a rendering/rendered event, temporarily opening the given sprite batch if needed to let mods draw to it.</summary>
+        /// <typeparam name="TEventArgs">The event args type to construct.</typeparam>
+        /// <param name="event">The event to raise.</param>
+        /// <param name="spriteBatch">The sprite batch being drawn to the screen.</param>
+        /// <param name="renderTarget">The render target being drawn to the screen.</param>
+        /// <param name="eventArgs">The event arguments to pass to the event.</param>
+        private void RaiseRenderEvent<TEventArgs>(ManagedEvent<TEventArgs> @event, SpriteBatch spriteBatch, RenderTarget2D renderTarget, TEventArgs eventArgs)
+            where TEventArgs : EventArgs
+        {
+            if (!@event.HasListeners)
+                return;
+
+            bool wasOpen = spriteBatch.IsOpen(this.Reflection);
+            bool hadRenderTarget = Game1.graphics.GraphicsDevice.RenderTargetCount > 0;
+
+            if (!hadRenderTarget && !Game1.IsOnMainThread())
+                return; // can't set render target on background thread
+
+            try
+            {
+                if (!wasOpen)
+                    Game1.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp);
+
+                if (!hadRenderTarget)
+                {
+                    renderTarget ??= Game1.game1.uiScreen?.IsDisposed != true
+                        ? Game1.game1.uiScreen
+                        : Game1.nonUIRenderTarget;
+
+                    if (renderTarget != null)
+                        Game1.SetRenderTarget(renderTarget);
+                }
+
+                @event.Raise(eventArgs);
+            }
+            finally
+            {
+                if (!wasOpen)
+                    spriteBatch.End();
+
+                if (!hadRenderTarget && renderTarget != null)
+                    Game1.SetRenderTarget(null);
+            }
+        }
+
         /// <summary>A callback invoked before <see cref="Game1.newDayAfterFade"/> runs.</summary>
         protected void OnNewDayAfterFade()
         {
@@ -1396,61 +1480,6 @@ namespace StardewModdingAPI.Framework
         {
             return Game1.game1 as SGame
                 ?? throw new InvalidOperationException("The current game instance wasn't created by SMAPI.");
-        }
-
-        /// <summary>Look for common issues with the game's XNB content, and log warnings if anything looks broken or outdated.</summary>
-        /// <returns>Returns whether all integrity checks passed.</returns>
-        private bool ValidateContentIntegrity()
-        {
-            this.Monitor.Log("Detecting common issues...");
-            bool issuesFound = false;
-
-            // object format (commonly broken by outdated files)
-            {
-                // detect issues
-                bool hasObjectIssues = false;
-                void LogIssue(int id, string issue) => this.Monitor.Log($@"Detected issue: item #{id} in Content\Data\ObjectInformation.xnb is invalid ({issue}).");
-                foreach ((int id, string? fieldsStr) in Game1.objectInformation)
-                {
-                    // must not be empty
-                    if (string.IsNullOrWhiteSpace(fieldsStr))
-                    {
-                        LogIssue(id, "entry is empty");
-                        hasObjectIssues = true;
-                        continue;
-                    }
-
-                    // require core fields
-                    string[] fields = fieldsStr.Split('/');
-                    if (fields.Length < SObject.objectInfoDescriptionIndex + 1)
-                    {
-                        LogIssue(id, "too few fields for an object");
-                        hasObjectIssues = true;
-                        continue;
-                    }
-
-                    // check min length for specific types
-                    switch (fields[SObject.objectInfoTypeIndex].Split(' ', 2)[0])
-                    {
-                        case "Cooking":
-                            if (fields.Length < SObject.objectInfoBuffDurationIndex + 1)
-                            {
-                                LogIssue(id, "too few fields for a cooking item");
-                                hasObjectIssues = true;
-                            }
-                            break;
-                    }
-                }
-
-                // log error
-                if (hasObjectIssues)
-                {
-                    issuesFound = true;
-                    this.Monitor.Log(@"Your Content\Data\ObjectInformation.xnb file seems to be broken or outdated.", LogLevel.Warn);
-                }
-            }
-
-            return !issuesFound;
         }
 
         /// <summary>Set the titles for the game and console windows.</summary>
@@ -1687,7 +1716,7 @@ namespace StardewModdingAPI.Framework
 
             // load mods
             IList<IModMetadata> skippedMods = new List<IModMetadata>();
-            using (AssemblyLoader modAssemblyLoader = new(Constants.Platform, this.Monitor, this.Settings.ParanoidWarnings, this.Settings.RewriteMods))
+            using (AssemblyLoader modAssemblyLoader = new(Constants.Platform, this.Monitor, this.Settings.ParanoidWarnings, this.Settings.RewriteMods, this.Settings.LogTechnicalDetailsForBrokenMods))
             {
                 // init
                 HashSet<string> suppressUpdateChecks = this.Settings.SuppressUpdateChecks;
@@ -1712,23 +1741,10 @@ namespace StardewModdingAPI.Framework
             this.ModRegistry.AreAllModsLoaded = true;
 
             // log mod info
-            this.LogManager.LogModInfo(loaded, loadedContentPacks, loadedMods, skippedMods.ToArray(), this.Settings.ParanoidWarnings);
+            this.LogManager.LogModInfo(loaded, loadedContentPacks, loadedMods, skippedMods.ToArray(), this.Settings.ParanoidWarnings, this.Settings.LogTechnicalDetailsForBrokenMods);
 
             // initialize translations
             this.ReloadTranslations(loaded);
-
-            // set temporary PyTK compatibility mode
-            // This is part of a three-part fix for PyTK 1.23.* and earlier. When removing this,
-            // search 'Platonymous.Toolkit' to find the other part in SMAPI and Content Patcher.
-            {
-                IModInfo? pyTk = this.ModRegistry.Get("Platonymous.Toolkit");
-                if (pyTk is not null && pyTk.Manifest.Version.IsOlderThan("1.24.0"))
-#if SMAPI_DEPRECATED
-                    ModContentManager.EnablePyTkLegacyMode = true;
-#else
-                    this.Monitor.Log("PyTK's image scaling is not compatible with SMAPI strict mode.", LogLevel.Warn);
-#endif
-            }
 
             // initialize loaded non-content-pack mods
             this.Monitor.Log("Launching mods...", LogLevel.Debug);
@@ -1737,69 +1753,6 @@ namespace StardewModdingAPI.Framework
                 IMod mod =
                     metadata.Mod
                     ?? throw new InvalidOperationException($"The '{metadata.DisplayName}' mod is not initialized correctly."); // should never happen, but avoids nullability warnings
-
-#if SMAPI_DEPRECATED
-                // add interceptors
-                if (mod.Helper is ModHelper helper)
-                {
-                    // ReSharper disable SuspiciousTypeConversion.Global
-                    if (mod is IAssetEditor editor)
-                    {
-                        SCore.DeprecationManager.Warn(
-                            source: metadata,
-                            nounPhrase: $"{nameof(IAssetEditor)}",
-                            version: "3.14.0",
-                            severity: DeprecationLevel.PendingRemoval,
-                            logStackTrace: false
-                        );
-
-                        this.ContentCore.Editors.Add(new ModLinked<IAssetEditor>(metadata, editor));
-                    }
-
-                    if (mod is IAssetLoader loader)
-                    {
-                        SCore.DeprecationManager.Warn(
-                            source: metadata,
-                            nounPhrase: $"{nameof(IAssetLoader)}",
-                            version: "3.14.0",
-                            severity: DeprecationLevel.PendingRemoval,
-                            logStackTrace: false
-                        );
-
-                        this.ContentCore.Loaders.Add(new ModLinked<IAssetLoader>(metadata, loader));
-                    }
-                    // ReSharper restore SuspiciousTypeConversion.Global
-
-                    ContentHelper content = helper.GetLegacyContentHelper();
-                    content.ObservableAssetEditors.CollectionChanged += (_, e) => this.OnAssetInterceptorsChanged(metadata, e.NewItems?.Cast<IAssetEditor>(), e.OldItems?.Cast<IAssetEditor>(), this.ContentCore.Editors);
-                    content.ObservableAssetLoaders.CollectionChanged += (_, e) => this.OnAssetInterceptorsChanged(metadata, e.NewItems?.Cast<IAssetLoader>(), e.OldItems?.Cast<IAssetLoader>(), this.ContentCore.Loaders);
-                }
-
-                // log deprecation warnings
-                if (metadata.HasWarnings(ModWarning.DetectedLegacyCachingDll, ModWarning.DetectedLegacyConfigurationDll, ModWarning.DetectedLegacyPermissionsDll))
-                {
-                    string?[] referenced =
-                        new[]
-                        {
-                            metadata.Warnings.HasFlag(ModWarning.DetectedLegacyConfigurationDll) ? "System.Configuration.ConfigurationManager" : null,
-                            metadata.Warnings.HasFlag(ModWarning.DetectedLegacyCachingDll) ? "System.Runtime.Caching" : null,
-                            metadata.Warnings.HasFlag(ModWarning.DetectedLegacyPermissionsDll) ? "System.Security.Permissions" : null
-                        }
-                        .Where(p => p is not null)
-                        .ToArray();
-
-                    foreach (string? name in referenced)
-                    {
-                        DeprecationManager.Warn(
-                            metadata,
-                            $"using {name} without bundling it",
-                            "3.14.7",
-                            DeprecationLevel.PendingRemoval,
-                            logStackTrace: false
-                        );
-                    }
-                }
-#endif
 
                 // initialize mod
                 Context.HeuristicModsRunningCode.Push(metadata);
@@ -1845,31 +1798,6 @@ namespace StardewModdingAPI.Framework
 
             this.Monitor.Log("Mods loaded and ready!", LogLevel.Debug);
         }
-
-#if SMAPI_DEPRECATED
-        /// <summary>Raised after a mod adds or removes asset interceptors.</summary>
-        /// <typeparam name="T">The asset interceptor type (one of <see cref="IAssetEditor"/> or <see cref="IAssetLoader"/>).</typeparam>
-        /// <param name="mod">The mod metadata.</param>
-        /// <param name="added">The interceptors that were added.</param>
-        /// <param name="removed">The interceptors that were removed.</param>
-        /// <param name="list">A list of interceptors to update for the change.</param>
-        private void OnAssetInterceptorsChanged<T>(IModMetadata mod, IEnumerable<T>? added, IEnumerable<T>? removed, IList<ModLinked<T>> list)
-            where T : notnull
-        {
-            foreach (T interceptor in added ?? Array.Empty<T>())
-            {
-                this.ReloadAssetInterceptorsQueue.Add(new AssetInterceptorChange(mod, interceptor, wasAdded: true));
-                list.Add(new ModLinked<T>(mod, interceptor));
-            }
-
-            foreach (T interceptor in removed ?? Array.Empty<T>())
-            {
-                this.ReloadAssetInterceptorsQueue.Add(new AssetInterceptorChange(mod, interceptor, wasAdded: false));
-                foreach (ModLinked<T> entry in list.Where(p => p.Mod == mod && object.ReferenceEquals(p.Data, interceptor)).ToArray())
-                    list.Remove(entry);
-            }
-        }
-#endif
 
         /// <summary>Load a given mod.</summary>
         /// <param name="mod">The mod to load.</param>
@@ -2013,9 +1941,6 @@ namespace StardewModdingAPI.Framework
                     {
                         IModEvents events = new ModEvents(mod, this.EventManager);
                         ICommandHelper commandHelper = new CommandHelper(mod, this.CommandManager);
-#if SMAPI_DEPRECATED
-                        ContentHelper contentHelper = new(contentCore, mod.DirectoryPath, mod, monitor, this.Reflection);
-#endif
                         GameContentHelper gameContentHelper = new(contentCore, mod, mod.DisplayName, monitor, this.Reflection);
                         IModContentHelper modContentHelper = new ModContentHelper(contentCore, mod.DirectoryPath, mod, mod.DisplayName, gameContentHelper.GetUnderlyingContentManager(), this.Reflection);
                         IContentPackHelper contentPackHelper = new ContentPackHelper(
@@ -2028,11 +1953,7 @@ namespace StardewModdingAPI.Framework
                         IModRegistry modRegistryHelper = new ModRegistryHelper(mod, this.ModRegistry, proxyFactory, monitor);
                         IMultiplayerHelper multiplayerHelper = new MultiplayerHelper(mod, this.Multiplayer);
 
-                        modHelper = new ModHelper(mod, mod.DirectoryPath, () => this.GetCurrentGameInstance().Input, events,
-#if SMAPI_DEPRECATED
-                            contentHelper,
-#endif
-                            gameContentHelper, modContentHelper, contentPackHelper, commandHelper, dataHelper, modRegistryHelper, reflectionHelper, multiplayerHelper, translationHelper);
+                        modHelper = new ModHelper(mod, mod.DirectoryPath, () => this.GetCurrentGameInstance().Input, events, gameContentHelper, modContentHelper, contentPackHelper, commandHelper, dataHelper, modRegistryHelper, reflectionHelper, multiplayerHelper, translationHelper);
                     }
 
                     // init mod

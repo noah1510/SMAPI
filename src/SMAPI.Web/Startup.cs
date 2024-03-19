@@ -20,6 +20,7 @@ using StardewModdingAPI.Web.Framework.Clients.GitHub;
 using StardewModdingAPI.Web.Framework.Clients.ModDrop;
 using StardewModdingAPI.Web.Framework.Clients.Nexus;
 using StardewModdingAPI.Web.Framework.Clients.Pastebin;
+using StardewModdingAPI.Web.Framework.Clients.UpdateManifest;
 using StardewModdingAPI.Web.Framework.Compression;
 using StardewModdingAPI.Web.Framework.ConfigModels;
 using StardewModdingAPI.Web.Framework.RedirectRules;
@@ -149,6 +150,8 @@ namespace StardewModdingAPI.Web
                     baseUrl: api.PastebinBaseUrl,
                     userAgent: userAgent
                 ));
+
+                services.AddSingleton<IUpdateManifestClient>(new UpdateManifestClient(userAgent: userAgent));
             }
 
             // init helpers
@@ -223,8 +226,11 @@ namespace StardewModdingAPI.Web
                     [@"^/xnb\.?$"] = "https://stardewvalleywiki.com/Modding:Using_XNB_mods",
 
                     // GitHub docs
-                    [@"^/package(?:/?(.*))$"] = "https://github.com/Pathoschild/SMAPI/blob/develop/docs/technical/mod-package.md#$1",
-                    [@"^/release(?:/?(.*))$"] = "https://github.com/Pathoschild/SMAPI/blob/develop/docs/release-notes.md#$1",
+                    ["^/package(?:/?(.*))$"] = "https://github.com/Pathoschild/SMAPI/blob/develop/docs/technical/mod-package.md#$1",
+                    ["^/release(?:/?(.*))$"] = "https://github.com/Pathoschild/SMAPI/blob/develop/docs/release-notes.md#$1",
+
+                    // Content Patcher docs
+                    ["/cp-migrate(?:/?(.*))$"] = "https://github.com/Pathoschild/StardewMods/blob/develop/ContentPatcher/docs/author-migration-guide.md#$1",
 
                     // legacy redirects
                     [@"^/compat\.?$"] = "https://smapi.io/mods"
