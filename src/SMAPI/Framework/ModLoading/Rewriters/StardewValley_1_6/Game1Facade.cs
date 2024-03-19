@@ -121,10 +121,35 @@ namespace StardewModdingAPI.Framework.ModLoading.Rewriters.StardewValley_1_6
             return Game1.getCharacterFromName(name, mustBeVillager);
         }
 
+        public static int getModeratelyDarkTime()
+        {
+            return Game1.getModeratelyDarkTime(Game1.currentLocation);
+        }
+
         public new static string GetSeasonForLocation(GameLocation location)
         {
             Season season = Game1.GetSeasonForLocation(location);
             return season.ToString();
+        }
+
+        public static int getStartingToGetDarkTime()
+        {
+            return Game1.getStartingToGetDarkTime(Game1.currentLocation);
+        }
+
+        public static int getTrulyDarkTime()
+        {
+            return Game1.getTrulyDarkTime(Game1.currentLocation);
+        }
+
+        public static bool isDarkOut()
+        {
+            return Game1.isDarkOut(Game1.currentLocation);
+        }
+
+        public static bool isStartingToGetDarkOut()
+        {
+            return Game1.isStartingToGetDarkOut(Game1.currentLocation);
         }
 
         public static void playMorningSong()

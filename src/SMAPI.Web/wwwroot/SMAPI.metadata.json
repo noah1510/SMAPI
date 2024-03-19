@@ -190,6 +190,11 @@
             "~2.0.0-6 | Status": "AssumeBroken",
             "~2.0.0-6 | StatusReasonDetails": "asset edits fail at runtime"
         },
+        "Betwitched": {
+            "ID": "b_wandert.Betwitched",
+            "~0.9.0 | Status": "AssumeBroken",
+            "~0.9.0 | StatusReasonDetails": "breaks loading the Forest location"
+        },
         "Bulk Animal Purchase": {
             "ID": "aedenthorn.BulkAnimalPurchase",
             "~1.1.2 | Status": "AssumeBroken",
@@ -250,10 +255,25 @@
             "~1.0.0 | Status": "AssumeBroken",
             "~1.0.0 | StatusReasonDetails": "causes runtime crash"
         },
+        "Farmageddon": {
+            "ID": "maxvollmer.farmageddon",
+            "~3.0.0 | Status": "AssumeBroken",
+            "~3.0.0 | StatusReasonDetails": "Harmony patches fail at runtime"
+        },
         "Fast Loads": {
             "ID": "spajus.fastloads",
             "~1.0.3 | Status": "AssumeBroken",
             "~1.0.3 | StatusReasonDetails": "Harmony patches fail at runtime"
+        },
+        "Fish Exclusions": {
+            "ID": "GZhynko.FishExclusions",
+            "~1.1.5 | Status": "AssumeBroken",
+            "~1.1.5 | StatusReasonDetails": "Harmony patches fail at runtime"
+        },
+        "Fishing Progression": {
+            "ID": "chadlymasterson.fishingprogression",
+            "~1.0.1 | Status": "AssumeBroken",
+            "~1.0.1 | StatusReasonDetails": "Harmony patches fail at runtime"
         },
         "Fixed Weapons Damage": {
             "ID": "BlueSight.FixedWeaponsDamage",
@@ -280,10 +300,20 @@
             "~1.0.0 | Status": "AssumeBroken",
             "~1.0.0 | StatusReasonDetails": "Harmony patches fail at runtime"
         },
+        "Hugs and Kisses": {
+            "ID": "aedenthorn.HugsAndKisses",
+            "~0.4.0 | Status": "AssumeBroken",
+            "~0.4.0 | StatusReasonDetails": "Harmony patches fail at runtime"
+        },
         "Mayo Hats": {
             "ID": "spacechase0.MayoHats",
             "~1.0.0 | Status": "AssumeBroken",
             "~1.0.0 | StatusReasonDetails": "affected by breaking changes in the Json Assets mod API"
+        },
+        "Mayo Mart": {
+            "ID": "aedenthorn.MayoMart",
+            "~0.1.0 | Status": "AssumeBroken",
+            "~0.1.0 | StatusReasonDetails": "Harmony patches fail at runtime"
         },
         "Misophonia Accessibility": {
             "ID": "TheFluffyRobot.MisophoniaAccessibility",
@@ -339,6 +369,11 @@
             "ID": "mizzion.onesprinkleronescarecrow",
             "~2.1.0 | Status": "AssumeBroken",
             "~2.1.0 | StatusReasonDetails": "Harmony patches fail at runtime"
+        },
+        "Ore Increaser": {
+            "ID": "crazywig.oreincrease",
+            "~1.0.0 | Status": "AssumeBroken",
+            "~1.0.0 | StatusReasonDetails": "Harmony patches fail at runtime"
         },
         "Ore Increase V3": {
             "ID": "OreIncreaseV3",
@@ -459,6 +494,11 @@
             "ID": "SwizzyStudios.SwizzyMeads",
             "~1.0.1-alpha | Status": "AssumeBroken",
             "~1.0.1-alpha | StatusReasonDetails": "Harmony patches fail at runtime"
+        },
+        "The Adventurer's Life Expanded": {
+            "ID": "HamioDracny.TALE.SMAPI",
+            "~1.2.1 | Status": "AssumeBroken",
+            "~1.2.1 | StatusReasonDetails": "Harmony patches fail at runtime"
         },
         "This Mod Is Organic": {
             "ID": "SweetPanda.Organic",

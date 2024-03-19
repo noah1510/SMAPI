@@ -74,7 +74,7 @@ namespace StardewModdingAPI.Framework.ModLoading.Rewriters.StardewValley_1_6
 
         public void farmerAdjacentAction(GameLocation location)
         {
-            base.farmerAdjacentAction();
+            base.farmerAdjacentAction(Game1.player);
         }
 
         public Rectangle getBoundingBox(Vector2 tileLocation)
