@@ -22,6 +22,7 @@
   * Fixed redundant `TRACE` logs for a broken mod which references members with the wrong types.
 
 * For the web UI:
+  * Updated JSON validator for Content Patcher 2.0.0.
   * Fixed uploaded log/JSON file expiry alway shown as renewed.
   * Fixed update check for mods with a prerelease version tag not recognized by the ModDrop API. SMAPI now parses the version itself if needed.
 
