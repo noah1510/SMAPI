@@ -260,7 +260,8 @@ namespace StardewModdingAPI.Framework.Logging
         /// <param name="loadedMods">The loaded mods.</param>
         /// <param name="skippedMods">The mods which could not be loaded.</param>
         /// <param name="logParanoidWarnings">Whether to log issues for mods which directly use potentially sensitive .NET APIs like file or shell access.</param>
-        public void LogModInfo(IModMetadata[] loaded, IModMetadata[] loadedContentPacks, IModMetadata[] loadedMods, IModMetadata[] skippedMods, bool logParanoidWarnings)
+        /// <param name="logTechnicalDetailsForBrokenMods">Whether to include more technical details about broken mods in the TRACE logs. This is mainly useful for creating compatibility rewriters.</param>
+        public void LogModInfo(IModMetadata[] loaded, IModMetadata[] loadedContentPacks, IModMetadata[] loadedMods, IModMetadata[] skippedMods, bool logParanoidWarnings, bool logTechnicalDetailsForBrokenMods)
         {
             // log loaded mods
             this.Monitor.Log($"Loaded {loadedMods.Length} mods" + (loadedMods.Length > 0 ? ":" : "."), LogLevel.Info);
@@ -299,7 +300,7 @@ namespace StardewModdingAPI.Framework.Logging
             }
 
             // log mod warnings
-            this.LogModWarnings(loaded, skippedMods, logParanoidWarnings);
+            this.LogModWarnings(loaded, skippedMods, logParanoidWarnings, logTechnicalDetailsForBrokenMods);
         }
 
         /// <inheritdoc />
@@ -316,8 +317,9 @@ namespace StardewModdingAPI.Framework.Logging
         /// <param name="mods">The loaded mods.</param>
         /// <param name="skippedMods">The mods which could not be loaded.</param>
         /// <param name="logParanoidWarnings">Whether to log issues for mods which directly use potentially sensitive .NET APIs like file or shell access.</param>
+        /// <param name="logTechnicalDetailsForBrokenMods">Whether to include more technical details about broken mods in the TRACE logs. This is mainly useful for creating compatibility rewriters.</param>
         [SuppressMessage("ReSharper", "ConditionalAccessQualifierIsNonNullableAccordingToAPIContract", Justification = "Manifests aren't guaranteed non-null at this point in the loading process.")]
-        private void LogModWarnings(IEnumerable<IModMetadata> mods, IModMetadata[] skippedMods, bool logParanoidWarnings)
+        private void LogModWarnings(IEnumerable<IModMetadata> mods, IModMetadata[] skippedMods, bool logParanoidWarnings, bool logTechnicalDetailsForBrokenMods)
         {
             // get mods with warnings
             IModMetadata[] modsWithWarnings = mods.Where(p => p.Warnings != ModWarning.None).ToArray();
@@ -345,7 +347,11 @@ namespace StardewModdingAPI.Framework.Logging
                     {
                         foreach (IModMetadata mod in list.OrderBy(p => p.DisplayName))
                         {
-                            string message = $"      - {mod.DisplayName}{(" " + mod.Manifest?.Version?.ToString()).TrimEnd()} because {mod.Error}";
+                            string technicalInfo = logTechnicalDetailsForBrokenMods
+                                ? $" (ID: {mod.Manifest?.UniqueID ?? "???"}, path: {mod.RelativeDirectoryPath})"
+                                : "";
+
+                            string message = $"      - {mod.DisplayName}{(" " + mod.Manifest?.Version?.ToString()).TrimEnd()}{technicalInfo} because {mod.Error}";
 
                             // duplicate mod: log first one only, don't show redundant version
                             if (mod.FailReason == ModFailReason.Duplicate && mod.HasManifest())

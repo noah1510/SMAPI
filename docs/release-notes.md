@@ -25,6 +25,10 @@
   * Fixed uploaded log/JSON file expiry alway shown as renewed.
   * Fixed update check for mods with a prerelease version tag not recognized by the ModDrop API. SMAPI now parses the version itself if needed.
 
+* For SMAPI developers:
+  * Improved compatibility rewriters.
+  * Added `LogTechnicalDetailsForBrokenMods` option in `smapi-internal/config.json` which adds more technical info to the SMAPI log when a mod is broken. This is mainly useful for creating compatibility rewriters.
+
 ## 3.18.6
 Released 05 October 2023 for Stardew Valley 1.5.6 or later.
 

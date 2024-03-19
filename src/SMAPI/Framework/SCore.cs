@@ -1716,7 +1716,7 @@ namespace StardewModdingAPI.Framework
 
             // load mods
             IList<IModMetadata> skippedMods = new List<IModMetadata>();
-            using (AssemblyLoader modAssemblyLoader = new(Constants.Platform, this.Monitor, this.Settings.ParanoidWarnings, this.Settings.RewriteMods))
+            using (AssemblyLoader modAssemblyLoader = new(Constants.Platform, this.Monitor, this.Settings.ParanoidWarnings, this.Settings.RewriteMods, this.Settings.LogTechnicalDetailsForBrokenMods))
             {
                 // init
                 HashSet<string> suppressUpdateChecks = this.Settings.SuppressUpdateChecks;
@@ -1741,7 +1741,7 @@ namespace StardewModdingAPI.Framework
             this.ModRegistry.AreAllModsLoaded = true;
 
             // log mod info
-            this.LogManager.LogModInfo(loaded, loadedContentPacks, loadedMods, skippedMods.ToArray(), this.Settings.ParanoidWarnings);
+            this.LogManager.LogModInfo(loaded, loadedContentPacks, loadedMods, skippedMods.ToArray(), this.Settings.ParanoidWarnings, this.Settings.LogTechnicalDetailsForBrokenMods);
 
             // initialize translations
             this.ReloadTranslations(loaded);

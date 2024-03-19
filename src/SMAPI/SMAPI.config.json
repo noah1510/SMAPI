@@ -93,6 +93,13 @@ in future SMAPI versions.
     "LogNetworkTraffic": false,
 
     /**
+     * Whether to include more technical details about broken mods in the TRACE logs. This is
+     * mainly useful for creating compatibility rewriters, it's not useful to most players or mod
+     * authors.
+     */
+    "LogTechnicalDetailsForBrokenMods": false,
+
+    /**
      * The colors to use for text written to the SMAPI console.
      *
      * The possible values for 'UseScheme' are:

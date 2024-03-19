@@ -56,7 +56,8 @@ namespace StardewModdingAPI.Metadata
         /// <summary>Get rewriters which detect or fix incompatible CIL instructions in mod assemblies.</summary>
         /// <param name="paranoidMode">Whether to detect paranoid mode issues.</param>
         /// <param name="rewriteMods">Whether to get handlers which rewrite mods for compatibility.</param>
-        public IEnumerable<IInstructionHandler> GetHandlers(bool paranoidMode, bool rewriteMods)
+        /// <param name="logTechnicalDetailsForBrokenMods">Whether to include more technical details about broken mods in the TRACE logs. This is mainly useful for creating compatibility rewriters.</param>
+        public IEnumerable<IInstructionHandler> GetHandlers(bool paranoidMode, bool rewriteMods, bool logTechnicalDetailsForBrokenMods)
         {
             /****
             ** rewrite CIL to fix incompatible code
@@ -304,7 +305,7 @@ namespace StardewModdingAPI.Metadata
             ** detect mod issues
             ****/
             // broken code
-            yield return new ReferenceToInvalidMemberFinder(this.ValidateReferencesToAssemblies);
+            yield return new ReferenceToInvalidMemberFinder(this.ValidateReferencesToAssemblies, logTechnicalDetailsForBrokenMods);
 
             // code which may impact game stability
             yield return new FieldFinder(typeof(SaveGame).FullName!, new[] { nameof(SaveGame.serializer), nameof(SaveGame.farmerSerializer), nameof(SaveGame.locationSerializer) }, InstructionHandleResult.DetectedSaveSerializer);

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -11,6 +12,7 @@ using StardewModdingAPI.Framework.ModLoading.Symbols;
 using StardewModdingAPI.Metadata;
 using StardewModdingAPI.Toolkit.Framework.ModData;
 using StardewModdingAPI.Toolkit.Utilities;
+using StardewValley;
 
 namespace StardewModdingAPI.Framework.ModLoading
 {
@@ -47,6 +49,9 @@ namespace StardewModdingAPI.Framework.ModLoading
         /// <summary>Whether to rewrite mods for compatibility.</summary>
         private readonly bool RewriteMods;
 
+        /// <summary>Whether to include more technical details about broken mods in the TRACE logs. This is mainly useful for creating compatibility rewriters.</summary>
+        private readonly bool LogTechnicalDetailsForBrokenMods;
+
 
         /*********
         ** Public methods
@@ -56,10 +61,12 @@ namespace StardewModdingAPI.Framework.ModLoading
         /// <param name="monitor">Encapsulates monitoring and logging.</param>
         /// <param name="paranoidMode">Whether to detect paranoid mode issues.</param>
         /// <param name="rewriteMods">Whether to rewrite mods for compatibility.</param>
-        public AssemblyLoader(Platform targetPlatform, IMonitor monitor, bool paranoidMode, bool rewriteMods)
+        /// <param name="logTechnicalDetailsForBrokenMods">Whether to include more technical details about broken mods in the TRACE logs. This is mainly useful for creating compatibility rewriters.</param>
+        public AssemblyLoader(Platform targetPlatform, IMonitor monitor, bool paranoidMode, bool rewriteMods, bool logTechnicalDetailsForBrokenMods)
         {
             this.Monitor = monitor;
             this.RewriteMods = rewriteMods;
+            this.LogTechnicalDetailsForBrokenMods = logTechnicalDetailsForBrokenMods;
             this.AssemblyMap = this.TrackForDisposal(Constants.GetAssemblyMap(targetPlatform));
 
             // init resolver
@@ -82,8 +89,18 @@ namespace StardewModdingAPI.Framework.ModLoading
             }
 
             // init rewriters
-            this.InstructionHandlers = new InstructionMetadata().GetHandlers(paranoidMode, this.RewriteMods).ToArray();
-
+            Stopwatch? timer = null;
+            if (logTechnicalDetailsForBrokenMods)
+            {
+                timer = new();
+                timer.Start();
+            }
+            this.InstructionHandlers = new InstructionMetadata().GetHandlers(paranoidMode, this.RewriteMods, logTechnicalDetailsForBrokenMods).ToArray();
+            if (logTechnicalDetailsForBrokenMods)
+            {
+                timer!.Stop();
+                monitor.Log($"[SMAPI] Initialized rewriters in {timer.ElapsedMilliseconds}ms");
+            }
         }
 
         /// <summary>Preprocess and load an assembly.</summary>
@@ -459,9 +476,14 @@ namespace StardewModdingAPI.Framework.ModLoading
                 return;
 
             // format messages
-            string phrase = handler.Phrases.Any()
-                ? string.Join(", ", handler.Phrases)
-                : handler.DefaultPhrase;
+            string phrase;
+            if (!handler.Phrases.Any())
+                phrase = handler.DefaultPhrase;
+            else if (this.LogTechnicalDetailsForBrokenMods && result == InstructionHandleResult.NotCompatible)
+                phrase = "\n - " + string.Join(";\n - ", handler.Phrases.OrderBy(p => p, StringComparer.OrdinalIgnoreCase));
+            else
+                phrase = string.Join(", ", handler.Phrases.OrderBy(p => p, StringComparer.OrdinalIgnoreCase));
+
             this.Monitor.LogOnce(loggedMessages, template.Replace("$phrase", phrase));
         }
 

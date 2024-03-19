@@ -17,16 +17,21 @@ namespace StardewModdingAPI.Framework.ModLoading.Finders
         /// <summary>The assembly names to which to heuristically detect broken references.</summary>
         private readonly ISet<string> ValidateReferencesToAssemblies;
 
+        /// <summary>Whether to include more technical details about broken mods in the TRACE logs. This is mainly useful for creating compatibility rewriters.</summary>
+        private readonly bool LogTechnicalDetailsForBrokenMods;
+
 
         /*********
         ** Public methods
         *********/
         /// <summary>Construct an instance.</summary>
         /// <param name="validateReferencesToAssemblies">The assembly names to which to heuristically detect broken references.</param>
-        public ReferenceToInvalidMemberFinder(ISet<string> validateReferencesToAssemblies)
+        /// <param name="logTechnicalDetailsForBrokenMods">Whether to include more technical details about broken mods in the TRACE logs. This is mainly useful for creating compatibility rewriters.</param>
+        public ReferenceToInvalidMemberFinder(ISet<string> validateReferencesToAssemblies, bool logTechnicalDetailsForBrokenMods)
             : base(defaultPhrase: "")
         {
             this.ValidateReferencesToAssemblies = validateReferencesToAssemblies;
+            this.LogTechnicalDetailsForBrokenMods = logTechnicalDetailsForBrokenMods;
         }
 
         /// <inheritdoc />
@@ -40,11 +45,11 @@ namespace StardewModdingAPI.Framework.ModLoading.Finders
 
                 // wrong return type
                 if (targetField != null && !RewriteHelper.LooksLikeSameType(fieldRef.FieldType, targetField.FieldType))
-                    this.MarkFlag(InstructionHandleResult.NotCompatible, $"reference to {fieldRef.DeclaringType.FullName}.{fieldRef.Name} (field returns {this.GetFriendlyTypeName(targetField.FieldType)}, not {this.GetFriendlyTypeName(fieldRef.FieldType)})");
+                    this.MarkFlag(InstructionHandleResult.NotCompatible, $"reference to {this.GetMemberDisplayName(fieldRef)} (field returns {this.GetFriendlyTypeName(targetField.FieldType)}, not {this.GetFriendlyTypeName(fieldRef.FieldType)})");
 
                 // missing
                 else if (targetField == null || targetField.HasConstant || !RewriteHelper.HasSameNamespaceAndName(fieldRef.DeclaringType, targetField.DeclaringType))
-                    this.MarkFlag(InstructionHandleResult.NotCompatible, $"reference to {fieldRef.DeclaringType.FullName}.{fieldRef.Name} (no such field)");
+                    this.MarkFlag(InstructionHandleResult.NotCompatible, $"reference to {this.GetMemberDisplayName(fieldRef)} (no such field)");
 
                 return false;
             }
@@ -60,21 +65,21 @@ namespace StardewModdingAPI.Framework.ModLoading.Finders
                 {
                     MethodDefinition[]? candidateMethods = methodRef.DeclaringType.Resolve()?.Methods.Where(found => found.Name == methodRef.Name).ToArray();
                     if (candidateMethods?.Any() is true && candidateMethods.All(method => !RewriteHelper.LooksLikeSameType(method.ReturnType, methodDef.ReturnType)))
-                        this.MarkFlag(InstructionHandleResult.NotCompatible, $"reference to {methodDef.DeclaringType.FullName}.{methodDef.Name} (no such method returns {this.GetFriendlyTypeName(methodDef.ReturnType)})");
+                        this.MarkFlag(InstructionHandleResult.NotCompatible, $"reference to {this.GetMemberDisplayName(methodDef)} (no such method returns {this.GetFriendlyTypeName(methodDef.ReturnType)})");
                 }
 
                 // missing
                 else if (methodDef is null)
                 {
-                    string phrase;
+                    string typeName;
                     if (this.IsProperty(methodRef))
-                        phrase = $"reference to {methodRef.DeclaringType.FullName}.{methodRef.Name.Substring(4)} (no such property)";
+                        typeName = "property";
                     else if (methodRef.Name == ".ctor")
-                        phrase = $"reference to {methodRef.DeclaringType.FullName}.{methodRef.Name} (no matching constructor)";
+                        typeName = "constructor";
                     else
-                        phrase = $"reference to {methodRef.DeclaringType.FullName}.{methodRef.Name} (no such method)";
+                        typeName = "method";
 
-                    this.MarkFlag(InstructionHandleResult.NotCompatible, phrase);
+                    this.MarkFlag(InstructionHandleResult.NotCompatible, $"reference to {this.GetMemberDisplayName(methodRef)} (no such {typeName})");
                 }
             }
 
@@ -98,6 +103,20 @@ namespace StardewModdingAPI.Framework.ModLoading.Finders
         {
             return
                 method.DeclaringType.Name.Contains("["); // array methods
+        }
+
+        /// <summary>Get the member name to show in logged messages.</summary>
+        /// <param name="memberRef">The member reference.</param>
+        private string GetMemberDisplayName(MemberReference memberRef)
+        {
+            if (this.LogTechnicalDetailsForBrokenMods)
+                return memberRef.FullName;
+
+            string name = memberRef.Name;
+            if (memberRef is PropertyReference)
+                name = name[4..]; // remove `get_` or `set_` prefix
+
+            return $"{memberRef.DeclaringType.FullName}.{name}";
         }
 
         /// <summary>Get a shorter type name for display.</summary>
