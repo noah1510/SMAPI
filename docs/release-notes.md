@@ -1,6 +1,10 @@
 ← [README](README.md)
 
 # Release notes
+# Upcoming release
+* For players:
+  * Fixed error in some cases when rewritten mod code removes an item from an inventory.
+
 ## 4.0.0
 Released 19 March 2024 for Stardew Valley 1.6.0 or later. See [release highlights](https://www.patreon.com/posts/100388693).
 

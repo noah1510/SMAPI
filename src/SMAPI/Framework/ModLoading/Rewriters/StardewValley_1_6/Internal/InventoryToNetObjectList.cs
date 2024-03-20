@@ -85,8 +85,14 @@ namespace StardewModdingAPI.Framework.ModLoading.Rewriters.StardewValley_1_6.Int
         /// <param name="after">The new value.</param>
         private void OnInventorySlotChanged(Inventory inventory, int index, Item before, Item after)
         {
-            // don't use `this` to avoid re-editing the inventory
-            base[index] = after;
+            try
+            {
+                base[index] = after;
+            }
+            catch
+            {
+                this.RebuildList(); // if the item list is out of sync, rebuild it
+            }
         }
 
         /// <summary>Handle the underlying inventory getting replaced with a new list.</summary>
