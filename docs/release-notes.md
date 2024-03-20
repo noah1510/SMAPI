@@ -1,6 +1,15 @@
 ← [README](README.md)
 
 # Release notes
+# 4.0.1
+Released 20 March 2024 for Stardew Valley 1.6.0 or later.
+
+* For players:
+  * Fixed error in some cases when rewritten mod code removes items from an inventory.
+
+* For the web UI:
+  * Added CurseForge download link to main page for cases where Nexus is unavailable.
+
 ## 4.0.0
 Released 19 March 2024 for Stardew Valley 1.6.0 or later. See [release highlights](https://www.patreon.com/posts/100388693).
 
