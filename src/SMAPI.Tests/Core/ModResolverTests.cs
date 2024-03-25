@@ -561,7 +561,7 @@ namespace SMAPI.Tests.Core
         /// <summary>Generate a default mod data record.</summary>
         private ModDataRecord GetModDataRecord()
         {
-            return new("Default Display Name", new ModDataModel("Sample ID", null, ModWarning.None));
+            return new("Default Display Name", new ModDataModel("Sample ID", null, ModWarning.None, false));
         }
 
         /// <summary>Generate a default mod data versioned fields instance.</summary>
