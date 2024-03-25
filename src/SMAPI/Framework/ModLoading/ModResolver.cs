@@ -335,6 +335,7 @@ namespace StardewModdingAPI.Framework.ModLoading
                         // sorted successfully
                         case ModDependencyStatus.Sorted:
                         case ModDependencyStatus.Failed when !dependency.IsRequired: // ignore failed optional dependency
+                        case ModDependencyStatus.Failed when modDatabase.Get(dependency.ID)?.IgnoreDependencies is true: // ignore failed dependency based on SMAPI metadata
                             break;
 
                         // failed, which means this mod can't be loaded either

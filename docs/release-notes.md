@@ -1,6 +1,16 @@
 ← [README](README.md)
 
 # Release notes
+## 4.0.2
+Released 24 March 2024 for Stardew Valley 1.6.0 or later.
+
+* For players:
+  * Updated mod compatibility list.
+  * Improved status for obsolete mods to be clearer that they can be removed.
+  * Disabled Extra Map Layers mod.
+    _Extra Map Layers mod caused visual issues like dark shadows in all locations with extra map layers, since the game now handles them automatically. SMAPI now disables Extra Map Layers and ignores dependencies on it._
+  * When using a custom `Mods` folder path, SMAPI now logs the game folder path to simplify troubleshooting.
+
 # 4.0.1
 Released 20 March 2024 for Stardew Valley 1.6.0 or later.
 
