@@ -1,6 +1,10 @@
 ← [README](README.md)
 
 # Release notes
+## Upcoming release
+* For players:
+  * When using a custom `Mods` folder path, SMAPI now logs the game folder path to simplify troubleshooting.
+
 # 4.0.1
 Released 20 March 2024 for Stardew Valley 1.6.0 or later.
 
