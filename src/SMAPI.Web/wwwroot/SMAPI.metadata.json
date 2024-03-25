@@ -109,37 +109,43 @@
         "Animal Mood Fix": {
             "ID": "GPeters-AnimalMoodFix",
             "~ | Status": "Obsolete",
-            "~ | StatusReasonPhrase": "the animal mood bugs were fixed in Stardew Valley 1.2."
+            "~ | StatusReasonPhrase": "the animal mood bugs were fixed in Stardew Valley 1.2. You can delete this mod."
         },
         "Bee House Flower Range Fix": {
             "ID": "kirbylink.beehousefix",
             "~ | Status": "Obsolete",
-            "~ | StatusReasonPhrase": "the bee house flower range was fixed in Stardew Valley 1.4."
+            "~ | StatusReasonPhrase": "the bee house flower range was fixed in Stardew Valley 1.4. You can delete this mod."
         },
         "Colored Chests": {
             "ID": "4befde5c-731c-4853-8e4b-c5cdf946805f",
             "~ | Status": "Obsolete",
-            "~ | StatusReasonPhrase": "colored chests were added in Stardew Valley 1.1."
+            "~ | StatusReasonPhrase": "colored chests were added in Stardew Valley 1.1. You can delete this mod."
         },
         "Error Handler": {
             "ID": "SMAPI.ErrorHandler",
             "~ | Status": "Obsolete",
-            "~ | StatusReasonPhrase": "its error handling was integrated into Stardew Valley 1.6."
+            "~ | StatusReasonPhrase": "its error handling was integrated into Stardew Valley 1.6. You can delete this mod."
+        },
+        "Extra Map Layers": {
+            "ID": "aedenthorn.ExtraMapLayers",
+            "~0.3.10 | Status": "Obsolete",
+            "~0.3.10 | StatusReasonPhrase": "extra map layer support was added in Stardew Valley 1.6. You can delete this mod.",
+            "IgnoreDependencies": true
         },
         "Modder Serialization Utility": {
             "ID": "SerializerUtils-0-1",
             "~ | Status": "Obsolete",
-            "~ | StatusReasonPhrase": "it's no longer maintained or used."
+            "~ | StatusReasonPhrase": "it's no longer maintained or used. You can delete this mod."
         },
         "No Debug Mode": {
             "ID": "NoDebugMode",
             "~ | Status": "Obsolete",
-            "~ | StatusReasonPhrase": "debug mode was removed in SMAPI 1.0."
+            "~ | StatusReasonPhrase": "debug mode was removed in SMAPI 1.0. You can delete this mod."
         },
         "Split Screen": {
             "ID": "Ilyaki.SplitScreen",
             "~ | Status": "Obsolete",
-            "~ | StatusReasonPhrase": "split-screen mode was added in Stardew Valley 1.5"
+            "~ | StatusReasonPhrase": "split-screen mode was added in Stardew Valley 1.5. You can delete this mod."
         },
 
         /*********
@@ -149,6 +155,11 @@
             "ID": "pepoluan.24h",
             "~0.3.1 | Status": "AssumeBroken",
             "~0.3.1 | StatusReasonDetails": "Harmony patches fail at runtime"
+        },
+        "Aimon's Fancy Farmhouse": {
+            "ID": "Aimon111.RedesignedFarmHouseLayoutAlt",
+            "~2.0.0 | Status": "AssumeBroken",
+            "~2.0.0 | StatusReasonDetails": "breaks farmhouse layout and causes runtime crashes"
         },
         "All Chests Menu": {
             "ID": "aedenthorn.AllChestsMenu",
@@ -172,8 +183,8 @@
         },
         "Better Elevator": {
             "ID": "aedenthorn.BetterElevator",
-            "~2.1.0 | Status": "AssumeBroken",
-            "~2.1.0 | StatusReasonDetails": "Harmony patches fail at runtime"
+            "~0.2.4 | Status": "AssumeBroken",
+            "~0.2.4 | StatusReasonDetails": "Harmony patches fail at runtime"
         },
         "Better Crab Pots": {
             "ID": "EpicBellyFlop45.BetterCrabPots",
@@ -504,6 +515,11 @@
             "ID": "SweetPanda.Organic",
             "~1.0.0 | Status": "AssumeBroken",
             "~1.0.0 | StatusReasonDetails": "affected by breaking changes in the Json Assets mod API"
+        },
+        "TimeSpeed": {
+            "ID": "cantorsdust.TimeSpeed",
+            "~2.7.7-alpha.20240220 | Status": "AssumeBroken",
+            "~2.7.7-alpha.20240220 | StatusReasonDetails": "causes runtime time issues before 2.7.7"
         },
         "Wealth is Health": {
             "ID": "QiTheMysterious.WealthIsHealth",
