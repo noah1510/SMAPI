@@ -21,6 +21,12 @@ namespace StardewModdingAPI.Framework.ModLoading.Rewriters.StardewValley_1_6
         /*********
         ** Accessors
         *********/
+        public bool eventActor
+        {
+            get => base.EventActor;
+            set => base.EventActor = value;
+        }
+
         public new int Gender
         {
             get => (int)base.Gender;
