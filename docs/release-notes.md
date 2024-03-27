@@ -1,6 +1,10 @@
 ← [README](README.md)
 
 # Release notes
+## Upcoming release
+* For players:
+  * Update compatibility rewrites for Stardew Valley 1.6.3.
+
 ## 4.0.2
 Released 24 March 2024 for Stardew Valley 1.6.0 or later.
 
