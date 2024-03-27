@@ -5,6 +5,7 @@
 * For players:
   * Update compatibility rewrites for Stardew Valley 1.6.3.
   * Updated mod compatibility list.
+  * Tweaked `player_add` console command's error messages for clarity.
 
 ## 4.0.2
 Released 24 March 2024 for Stardew Valley 1.6.0 or later.

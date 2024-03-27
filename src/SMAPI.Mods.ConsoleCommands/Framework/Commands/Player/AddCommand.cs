@@ -144,7 +144,7 @@ namespace StardewModdingAPI.Mods.ConsoleCommands.Framework.Commands.Player
             SearchableItem[] matches = this.Items.GetAll().Where(p => p.NameContains(name)).ToArray();
             if (!matches.Any())
             {
-                monitor.Log($"There's no item with name '{name}'. You can use the 'list_items [name]' command to search for items.", LogLevel.Error);
+                monitor.Log($"There's no item whose name contains '{name}'. You can use 'list_items' command to list all items, or search like 'list_items {name}'.", LogLevel.Error);
                 return null;
             }
 
@@ -159,7 +159,7 @@ namespace StardewModdingAPI.Mods.ConsoleCommands.Framework.Commands.Player
                 header: new[] { "type", "name", "command" },
                 getRow: item => new[] { item.Type.ToString(), item.DisplayName, $"player_add {item.QualifiedItemId}" }
             );
-            monitor.Log($"There's no item with name '{name}'. Do you mean one of these?\n\n{options}", LogLevel.Info);
+            monitor.Log($"Multiple items have a name containing '{name}'. Do you mean one of these?\n\n{options}", LogLevel.Info);
             return null;
         }
 
