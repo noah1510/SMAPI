@@ -1,6 +1,12 @@
 ← [README](README.md)
 
 # Release notes
+## Upcoming release
+* For the web UI:
+  * Fixed JSON schema validation:
+    * Manifest `UpdateKeys` field now allows dots in the GitHub repo name.
+    * Fixed Content Patcher's `FromMapFile` and `FromFile` patterns.
+
 ## 4.0.3
 Released 27 March 2024 for Stardew Valley 1.6.0 or later.
 
