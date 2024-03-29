@@ -4,6 +4,7 @@
 ## Upcoming release
 * For players:
   * Fixed some mods compiled for Stardew Valley 1.6.3+ not working in 1.6.0–1.6.2.
+  * Fixed SMAPI's "Found warnings with X mods" counting warnings that aren't enabled.
 
 * For the web UI:
   * Fixed JSON schema validation:

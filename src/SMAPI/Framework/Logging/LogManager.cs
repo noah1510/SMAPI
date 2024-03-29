@@ -322,7 +322,15 @@ namespace StardewModdingAPI.Framework.Logging
         private void LogModWarnings(IEnumerable<IModMetadata> mods, IModMetadata[] skippedMods, bool logParanoidWarnings, bool logTechnicalDetailsForBrokenMods)
         {
             // get mods with warnings
-            IModMetadata[] modsWithWarnings = mods.Where(p => p.Warnings != ModWarning.None).ToArray();
+            IModMetadata[] modsWithWarnings = mods
+                .Where(p =>
+                    (
+                        logParanoidWarnings
+                            ? p.Warnings
+                            : p.Warnings & ~ModWarning.AccessesFilesystem & ~ModWarning.AccessesShell
+                    ) != ModWarning.None
+                )
+                .ToArray();
             if (!modsWithWarnings.Any() && !skippedMods.Any())
                 return;
 
