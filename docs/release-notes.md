@@ -2,6 +2,9 @@
 
 # Release notes
 ## Upcoming release
+* For players:
+  * Fixed some mods compiled for Stardew Valley 1.6.3+ not working in 1.6.0–1.6.2.
+
 * For the web UI:
   * Fixed JSON schema validation:
     * Manifest `UpdateKeys` field now allows dots in the GitHub repo name.
