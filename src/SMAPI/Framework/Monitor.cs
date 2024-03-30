@@ -38,6 +38,12 @@ namespace StardewModdingAPI.Framework
         /*********
         ** Accessors
         *********/
+        /// <summary>Whether to log basic contextual info (like buttons pressed and menus opened) even if <see cref="IsVerbose"/> is disabled.</summary>
+        public static bool ForceLogContext { get; set; }
+
+        /// <summary>The current log level for contextual info that's relevant to the <see cref="ForceLogContext"/> flag.</summary>
+        public static LogLevel ContextLogLevel => Monitor.ForceLogContext ? LogLevel.Info : LogLevel.Trace;
+
         /// <inheritdoc />
         public bool IsVerbose { get; }
 

@@ -22,6 +22,4 @@
   <ItemGroup>
     <None Update="manifest.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
-
-  <Import Project="..\SMAPI.Internal\SMAPI.Internal.projitems" Label="Shared" />
 </Project>
