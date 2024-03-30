@@ -37,9 +37,7 @@ while [ "$#" -gt 0 ]; do
     case "$1" in
         --skip-terminal ) SKIP_TERMINAL=true; shift ;;
         --use-current-shell ) USE_CURRENT_SHELL=true; shift ;;
-        # ${1#*=}, It removes everything before the equals sign (including the equals sign) from $1
-        # leaving only what comes after the equals sign
-        --prefer-terminal-name=* ) PREFER_TERMINAL_NAME="${1#*=}"; shift ;;
+        --prefer-terminal-name=* ) PREFER_TERMINAL_NAME="${1#*=}"; shift ;; # ${1#*=} removes everything up to the equals sign from $1
         -- ) shift; break ;;
         * ) shift ;;
     esac

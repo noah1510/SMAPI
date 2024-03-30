@@ -3,10 +3,13 @@
 # Release notes
 ## Upcoming release
 * For players:
+  * Added [`--prefer-terminal-name` command-line argument](technical/smapi.md#command-line-arguments) to override which terminal SMAPI is launched with (thanks to test482!).
   * Fixed some mods compiled for Stardew Valley 1.6.3+ not working in 1.6.0–1.6.2.
-  * Fixed SMAPI's "Found warnings with X mods" counting warnings that aren't enabled.
+  * Fixed SMAPI's "_Found warnings with X mods_" message counting hidden warnings.
+  * Improved translations. Thanks to RezaHidayatM (added Indonesian)!
 
 * For the web UI:
+  * Improved smapi.io colors for accessibility, converted PNG images to SVG, and updated Patreon logo (thanks to ishan!).
   * Fixed JSON schema validation:
     * Manifest `UpdateKeys` field now allows dots in the GitHub repo name.
     * Fixed Content Patcher's `FromMapFile` and `FromFile` patterns.
