@@ -657,7 +657,7 @@ namespace StardewModdingAPI.Framework
                 bool saveParsed = false;
                 if (Game1.currentLoader != null)
                 {
-                    this.Monitor.Log("Game loader synchronizing...");
+                    this.Monitor.Log("Game loader synchronizing...", Monitor.ContextLogLevel);
                     Game1.game1.UpdateTitleScreen(Game1.currentGameTime); // run game logic to change music on load, etc
                     // ReSharper disable once ConstantConditionalAccessQualifier -- may become null within the loop
                     while (Game1.currentLoader?.MoveNext() == true)
@@ -688,7 +688,7 @@ namespace StardewModdingAPI.Framework
                     }
 
                     Game1.currentLoader = null;
-                    this.Monitor.Log("Game loader done.");
+                    this.Monitor.Log("Game loader done.", Monitor.ContextLogLevel);
                 }
 
                 // While a background task is in progress, the game may make changes to the game
@@ -720,7 +720,7 @@ namespace StardewModdingAPI.Framework
                     if (!Context.IsWorldReady && !instance.IsBetweenCreateEvents)
                     {
                         instance.IsBetweenCreateEvents = true;
-                        this.Monitor.Log("Context: before save creation.");
+                        this.Monitor.Log("Context: before save creation.", Monitor.ContextLogLevel);
                         events.SaveCreating.RaiseEmpty();
                     }
 
@@ -728,7 +728,7 @@ namespace StardewModdingAPI.Framework
                     if (Context.IsWorldReady && !instance.IsBetweenSaveEvents)
                     {
                         instance.IsBetweenSaveEvents = true;
-                        this.Monitor.Log("Context: before save.");
+                        this.Monitor.Log("Context: before save.", Monitor.ContextLogLevel);
                         events.Saving.RaiseEmpty();
                     }
 
@@ -775,7 +775,7 @@ namespace StardewModdingAPI.Framework
                     {
                         // raise after-create
                         instance.IsBetweenCreateEvents = false;
-                        this.Monitor.Log($"Context: after save creation, starting {Game1.currentSeason} {Game1.dayOfMonth} Y{Game1.year}.");
+                        this.Monitor.Log($"Context: after save creation, starting {Game1.currentSeason} {Game1.dayOfMonth} Y{Game1.year}.", Monitor.ContextLogLevel);
                         this.OnLoadStageChanged(LoadStage.CreatedSaveFile);
                         events.SaveCreated.RaiseEmpty();
                     }
@@ -784,7 +784,7 @@ namespace StardewModdingAPI.Framework
                     {
                         // raise after-save
                         instance.IsBetweenSaveEvents = false;
-                        this.Monitor.Log($"Context: after save, starting {Game1.currentSeason} {Game1.dayOfMonth} Y{Game1.year}.");
+                        this.Monitor.Log($"Context: after save, starting {Game1.currentSeason} {Game1.dayOfMonth} Y{Game1.year}.", Monitor.ContextLogLevel);
                         events.Saved.RaiseEmpty();
                         events.DayStarted.RaiseEmpty();
                     }
@@ -793,7 +793,7 @@ namespace StardewModdingAPI.Framework
                     ** Locale changed events
                     *********/
                     if (state.Locale.IsChanged)
-                        this.Monitor.Log($"Context: locale set to {state.Locale.New} ({this.ContentCore.GetLocaleCode(state.Locale.New)}).");
+                        this.Monitor.Log($"Context: locale set to {state.Locale.New} ({this.ContentCore.GetLocaleCode(state.Locale.New)}).", Monitor.ContextLogLevel);
 
                     /*********
                     ** Load / return-to-title events
@@ -812,7 +812,7 @@ namespace StardewModdingAPI.Framework
                         else
                             context += " Single-player.";
 
-                        this.Monitor.Log(context);
+                        this.Monitor.Log(context, Monitor.ContextLogLevel);
 
                         // add context to window titles
                         this.UpdateWindowTitles();
@@ -833,7 +833,7 @@ namespace StardewModdingAPI.Framework
                     if (state.WindowSize.IsChanged)
                     {
                         if (verbose)
-                            this.Monitor.Log($"Events: window size changed to {state.WindowSize.New}.");
+                            this.Monitor.Log($"Events: window size changed to {state.WindowSize.New}.", Monitor.ContextLogLevel);
 
                         if (events.WindowResized.HasListeners)
                             events.WindowResized.Raise(new WindowResizedEventArgs(state.WindowSize.Old, state.WindowSize.New));
@@ -872,24 +872,25 @@ namespace StardewModdingAPI.Framework
 
                                 bool raisePressed = events.ButtonPressed.HasListeners;
                                 bool raiseReleased = events.ButtonReleased.HasListeners;
+                                bool logInput = verbose || Monitor.ForceLogContext;
 
-                                if (verbose || raisePressed || raiseReleased)
+                                if (logInput || raisePressed || raiseReleased)
                                 {
                                     foreach ((SButton button, SButtonState status) in inputState.ButtonStates)
                                     {
                                         switch (status)
                                         {
                                             case SButtonState.Pressed:
-                                                if (verbose)
-                                                    this.Monitor.Log($"Events: button {button} pressed.");
+                                                if (logInput)
+                                                    this.Monitor.Log($"Events: button {button} pressed.", Monitor.ContextLogLevel);
 
                                                 if (raisePressed)
                                                     events.ButtonPressed.Raise(new ButtonPressedEventArgs(button, cursor, inputState));
                                                 break;
 
                                             case SButtonState.Released:
-                                                if (verbose)
-                                                    this.Monitor.Log($"Events: button {button} released.");
+                                                if (logInput)
+                                                    this.Monitor.Log($"Events: button {button} released.", Monitor.ContextLogLevel);
 
                                                 if (raiseReleased)
                                                     events.ButtonReleased.Raise(new ButtonReleasedEventArgs(button, cursor, inputState));
@@ -909,8 +910,8 @@ namespace StardewModdingAPI.Framework
                         IClickableMenu? was = state.ActiveMenu.Old;
                         IClickableMenu? now = state.ActiveMenu.New;
 
-                        if (verbose)
-                            this.Monitor.Log($"Context: menu changed from {was?.GetType().FullName ?? "none"} to {now?.GetType().FullName ?? "none"}.");
+                        if (verbose || Monitor.ForceLogContext)
+                            this.Monitor.Log($"Context: menu changed from {was?.GetType().FullName ?? "none"} to {now?.GetType().FullName ?? "none"}.", Monitor.ContextLogLevel);
 
                         // raise menu events
                         if (events.MenuChanged.HasListeners)
@@ -934,7 +935,7 @@ namespace StardewModdingAPI.Framework
                             {
                                 string addedText = added.Any() ? string.Join(", ", added.Select(p => p.Name)) : "none";
                                 string removedText = removed.Any() ? string.Join(", ", removed.Select(p => p.Name)) : "none";
-                                this.Monitor.Log($"Context: location list changed (added {addedText}; removed {removedText}).");
+                                this.Monitor.Log($"Context: location list changed (added {addedText}; removed {removedText}).", Monitor.ContextLogLevel);
                             }
 
                             if (events.LocationListChanged.HasListeners)
@@ -989,7 +990,7 @@ namespace StardewModdingAPI.Framework
                         if (raiseWorldEvents && state.Time.IsChanged)
                         {
                             if (verbose)
-                                this.Monitor.Log($"Context: time changed to {state.Time.New}.");
+                                this.Monitor.Log($"Context: time changed to {state.Time.New}.", Monitor.ContextLogLevel);
 
                             if (events.TimeChanged.HasListeners)
                                 events.TimeChanged.Raise(new TimeChangedEventArgs(state.Time.Old, state.Time.New));
@@ -1005,7 +1006,7 @@ namespace StardewModdingAPI.Framework
                             if (playerState.Location.IsChanged)
                             {
                                 if (verbose)
-                                    this.Monitor.Log($"Context: set location to {playerState.Location.New}.");
+                                    this.Monitor.Log($"Context: set location to {playerState.Location.New}.", Monitor.ContextLogLevel);
 
                                 if (events.Warped.HasListeners)
                                     events.Warped.Raise(new WarpedEventArgs(player, playerState.Location.Old!, playerState.Location.New!));
@@ -1021,7 +1022,7 @@ namespace StardewModdingAPI.Framework
                                         continue;
 
                                     if (verbose)
-                                        this.Monitor.Log($"Events: player skill '{skill}' changed from {value.Old} to {value.New}.");
+                                        this.Monitor.Log($"Events: player skill '{skill}' changed from {value.Old} to {value.New}.", Monitor.ContextLogLevel);
 
                                     if (raiseLevelChanged)
                                         events.LevelChanged.Raise(new LevelChangedEventArgs(player, skill, value.Old, value.New));
@@ -1032,7 +1033,7 @@ namespace StardewModdingAPI.Framework
                             if (playerState.Inventory.IsChanged)
                             {
                                 if (verbose)
-                                    this.Monitor.Log("Events: player inventory changed.");
+                                    this.Monitor.Log("Events: player inventory changed.", Monitor.ContextLogLevel);
 
                                 if (events.InventoryChanged.HasListeners)
                                 {
@@ -1156,13 +1157,14 @@ namespace StardewModdingAPI.Framework
             // update data
             LoadStage oldStage = Context.LoadStage;
             Context.LoadStage = newStage;
-            this.Monitor.VerboseLog($"Context: load stage changed to {newStage}");
+            if (this.Monitor.IsVerbose || Monitor.ForceLogContext)
+                this.Monitor.Log($"Context: load stage changed to {newStage}", Monitor.ContextLogLevel);
 
             // handle stages
             switch (newStage)
             {
                 case LoadStage.ReturningToTitle:
-                    this.Monitor.Log("Context: returning to title");
+                    this.Monitor.Log("Context: returning to title", Monitor.ContextLogLevel);
                     this.OnReturningToTitle();
                     break;
 

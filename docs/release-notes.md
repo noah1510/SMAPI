@@ -4,6 +4,7 @@
 ## Upcoming release
 * For players:
   * Added [`--prefer-terminal-name` command-line argument](technical/smapi.md#command-line-arguments) to override which terminal SMAPI is launched with (thanks to test482!).
+  * Added `log_context` console command. This replaces `log_input` and logs more information like menu changes.
   * Fixed some mods compiled for Stardew Valley 1.6.3+ not working in 1.6.0–1.6.2.
   * Fixed SMAPI's "_Found warnings with X mods_" message counting hidden warnings.
   * Improved translations. Thanks to RezaHidayatM (added Indonesian)!
