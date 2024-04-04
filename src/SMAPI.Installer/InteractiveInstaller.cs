@@ -56,6 +56,7 @@ namespace StardewModdingApi.Installer
             // obsolete files
             yield return GetInstallPath("libgdiplus.dylib");                 // before 3.13 (macOS only)
             yield return GetInstallPath(Path.Combine("Mods", ".cache"));     // 1.3-1.4
+            yield return GetInstallPath(Path.Combine("Mods", "ErrorHandler")); // before 4.0 (no longer needed)
             yield return GetInstallPath(Path.Combine("Mods", "TrainerMod")); // before 2.0 (renamed to ConsoleCommands)
             yield return GetInstallPath("Mono.Cecil.Rocks.dll");             // 1.3-1.8
             yield return GetInstallPath("StardewModdingAPI-settings.json");  // 1.0-1.4
