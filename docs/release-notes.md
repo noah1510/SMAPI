@@ -1,6 +1,10 @@
 ← [README](README.md)
 
 # Release notes
+## Upcoming release
+* For players:
+  * The installer now deletes obsolete files from very old SMAPI versions again. (This was removed in SMAPI 4.0, but many players still had very old versions.)
+
 ## 4.0.4
 Released 29 March 2024 for Stardew Valley 1.6.0 or later.
 
