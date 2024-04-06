@@ -1,15 +1,18 @@
 ← [README](README.md)
 
 # Release notes
-## Upcoming release
+## 4.0.5
+Released 06 April 2024 for Stardew Valley 1.6.0 or later.
+
 * For players:
-  * The installer now deletes obsolete files from very old SMAPI versions again. (This was removed in SMAPI 4.0, but many players still had very old versions.)
+  * The installer now deletes obsolete files from very old SMAPI versions again.
   * The installer now deletes Error Handler automatically if it's at the default path.
+  * Fixed mods sometimes not applying logic inside new buildings.
   * Minor optimizations.
   * Updated mod compatibility list.
 
 * For mod authors:
-  * Fixed world-changed events (e.g. `ObjectListChanged`) not working correctly inside freshly-constructed building.
+  * Fixed world-changed events (e.g. `ObjectListChanged`) not working correctly inside freshly-constructed buildings.
 
 ## 4.0.4
 Released 29 March 2024 for Stardew Valley 1.6.0 or later.
