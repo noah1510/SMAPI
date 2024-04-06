@@ -7,6 +7,9 @@
   * The installer now deletes Error Handler automatically if it's at the default path.
   * Updated mod compatibility list.
 
+* For mod authors:
+  * Fixed world-changed events (e.g. `ObjectListChanged`) not working correctly inside freshly-constructed building.
+
 ## 4.0.4
 Released 29 March 2024 for Stardew Valley 1.6.0 or later.
 

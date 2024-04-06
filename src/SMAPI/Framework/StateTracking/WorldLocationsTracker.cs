@@ -102,14 +102,16 @@ namespace StardewModdingAPI.Framework.StateTracking
             }
 
             // detect building interiors changed (e.g. construction completed)
-            foreach ((Building building, GameLocation? oldIndoors) in this.BuildingIndoors.Where(p => !object.Equals(p.Key.indoors.Value, p.Value)))
+            foreach ((Building building, GameLocation? oldIndoors) in this.BuildingIndoors)
             {
                 GameLocation? newIndoors = building.indoors.Value;
+                if (object.ReferenceEquals(oldIndoors, newIndoors))
+                    continue;
 
-                if (oldIndoors != null)
-                    this.Added.Add(oldIndoors);
-                if (newIndoors != null)
-                    this.Removed.Add(newIndoors);
+                this.Remove(oldIndoors);
+                this.Add(newIndoors);
+
+                this.BuildingIndoors[building] = newIndoors;
             }
         }
 
