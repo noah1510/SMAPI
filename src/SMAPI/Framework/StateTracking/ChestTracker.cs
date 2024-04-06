@@ -74,7 +74,9 @@ namespace StardewModdingAPI.Framework.StateTracking
         public void Reset()
         {
             // update stack sizes
-            foreach (Item item in this.StackSizes.Keys.ToArray().Concat(this.Added))
+            foreach (Item item in this.StackSizes.Keys)
+                this.StackSizes[item] = item.Stack;
+            foreach (Item item in this.Added)
                 this.StackSizes[item] = item.Stack;
 
             // update watcher

@@ -5,6 +5,7 @@
 * For players:
   * The installer now deletes obsolete files from very old SMAPI versions again. (This was removed in SMAPI 4.0, but many players still had very old versions.)
   * The installer now deletes Error Handler automatically if it's at the default path.
+  * Minor optimizations.
   * Updated mod compatibility list.
 
 * For mod authors:

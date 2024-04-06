@@ -30,6 +30,9 @@ namespace StardewModdingAPI.Framework.StateTracking
         /// <summary>A lookup of registered buildings and their indoor location.</summary>
         private readonly Dictionary<Building, GameLocation?> BuildingIndoors = new(new ObjectReferenceComparer<Building>());
 
+        /// <summary>The pooled list instance for <see cref="GetLocationsWhoseBuildingsChanged"/>.</summary>
+        private static readonly List<LocationTracker> PooledLocationsWithBuildingsChanged = new();
+
 
         /*********
         ** Accessors
@@ -95,7 +98,7 @@ namespace StardewModdingAPI.Framework.StateTracking
             }
 
             // detect building changed
-            foreach (LocationTracker watcher in this.Locations.Where(p => p.BuildingsWatcher.IsChanged).ToArray())
+            foreach (LocationTracker watcher in this.GetLocationsWhoseBuildingsChanged())
             {
                 this.Remove(watcher.BuildingsWatcher.Removed);
                 this.Add(watcher.BuildingsWatcher.Added);
@@ -260,6 +263,22 @@ namespace StardewModdingAPI.Framework.StateTracking
             yield return this.VolcanoLocationListWatcher;
             foreach (LocationTracker watcher in this.Locations)
                 yield return watcher;
+        }
+
+        /// <summary>Get the locations whose building list changed, if any.</summary>
+        private List<LocationTracker> GetLocationsWhoseBuildingsChanged()
+        {
+            List<LocationTracker> list = WorldLocationsTracker.PooledLocationsWithBuildingsChanged;
+            if (list.Count > 0)
+                list.Clear();
+
+            foreach (LocationTracker watcher in this.LocationDict.Values)
+            {
+                if (watcher.IsChanged)
+                    list.Add(watcher);
+            }
+
+            return list;
         }
     }
 }
