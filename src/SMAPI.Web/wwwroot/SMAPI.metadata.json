@@ -208,13 +208,18 @@
         },
         "Bulk Animal Purchase": {
             "ID": "aedenthorn.BulkAnimalPurchase",
-            "~1.1.2 | Status": "AssumeBroken",
-            "~1.1.2 | StatusReasonDetails": "Harmony patches fail at runtime"
+            "~0.2.1 | Status": "AssumeBroken",
+            "~0.2.1 | StatusReasonDetails": "Harmony patches fail at runtime"
         },
         "Build On Any Tile": {
             "ID": "Esca.BuildOnAnyTile",
             "~1.1.2 | Status": "AssumeBroken",
             "~1.1.2 | StatusReasonDetails": "Harmony patches fail at runtime"
+        },
+        "Carry Chest": {
+            "ID": "spacechase0.CarryChest",
+            "~1.3.6 | Status": "AssumeBroken",
+            "~1.3.6 | StatusReasonDetails": "loses items when chest is placed"
         },
         "Categories in Recipes": {
             "ID": "Traktori.CategoriesInRecipes",
@@ -256,10 +261,10 @@
             "~0.1.1 | Status": "AssumeBroken",
             "~0.1.1 | StatusReasonDetails": "Harmony patches fail at runtime"
         },
-        "Enemy health Bars": {
+        "Enemy Health Bars": {
             "ID": "Speeder.HealthBars",
-            "~1.9.1 | Status": "AssumeBroken",
-            "~1.9.1 | StatusReasonDetails": "causes runtime errors"
+            "~1.9.1-unofficial.2-libraryaddict | Status": "AssumeBroken",
+            "~1.9.1-unofficial.2-libraryaddict | StatusReasonDetails": "causes runtime errors"
         },
         "Extreme Weather": {
             "ID": "BlaDe.ExtremeWeather",
