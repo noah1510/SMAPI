@@ -66,12 +66,13 @@ namespace StardewModdingAPI.Framework.ModLoading
         /// <summary>Validate manifest metadata.</summary>
         /// <param name="mods">The mod manifests to validate.</param>
         /// <param name="apiVersion">The current SMAPI version.</param>
+        /// <param name="gameVersion">The current Stardew Valley version.</param>
         /// <param name="getUpdateUrl">Get an update URL for an update key (if valid).</param>
         /// <param name="getFileLookup">Get a file lookup for the given directory.</param>
         /// <param name="validateFilesExist">Whether to validate that files referenced in the manifest (like <see cref="IManifest.EntryDll"/>) exist on disk. This can be disabled to only validate the manifest itself.</param>
         [SuppressMessage("ReSharper", "ConditionalAccessQualifierIsNonNullableAccordingToAPIContract", Justification = "Manifest values may be null before they're validated.")]
         [SuppressMessage("ReSharper", "ConditionIsAlwaysTrueOrFalseAccordingToNullableAPIContract", Justification = "Manifest values may be null before they're validated.")]
-        public void ValidateManifests(IEnumerable<IModMetadata> mods, ISemanticVersion apiVersion, Func<string, string?> getUpdateUrl, Func<string, IFileLookup> getFileLookup, bool validateFilesExist = true)
+        public void ValidateManifests(IEnumerable<IModMetadata> mods, ISemanticVersion apiVersion, ISemanticVersion gameVersion, Func<string, string?> getUpdateUrl, Func<string, IFileLookup> getFileLookup, bool validateFilesExist = true)
         {
             mods = mods.ToArray();
 
@@ -123,6 +124,13 @@ namespace StardewModdingAPI.Framework.ModLoading
                 if (mod.Manifest.MinimumApiVersion?.IsNewerThan(apiVersion) == true)
                 {
                     mod.SetStatus(ModMetadataStatus.Failed, ModFailReason.Incompatible, $"it needs SMAPI {mod.Manifest.MinimumApiVersion} or later. Please update SMAPI to the latest version to use this mod.");
+                    continue;
+                }
+
+                // validate game version
+                if (mod.Manifest.MinimumGameVersion?.IsNewerThan(gameVersion) == true)
+                {
+                    mod.SetStatus(ModMetadataStatus.Failed, ModFailReason.Incompatible, $"it needs Stardew Valley {mod.Manifest.MinimumGameVersion} or later. Please update your game to the latest version to use this mod.");
                     continue;
                 }
 

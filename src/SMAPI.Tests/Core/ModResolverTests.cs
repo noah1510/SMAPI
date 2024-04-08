@@ -82,6 +82,7 @@ namespace SMAPI.Tests.Core
                 [nameof(IManifest.UniqueID)] = $"{Sample.String()}.{Sample.String()}",
                 [nameof(IManifest.EntryDll)] = $"{Sample.String()}.dll",
                 [nameof(IManifest.MinimumApiVersion)] = $"{Sample.Int()}.{Sample.Int()}.{Sample.Int()}-{Sample.String()}",
+                [nameof(IManifest.MinimumGameVersion)] = $"{Sample.Int()}.{Sample.Int()}.{Sample.Int()}-{Sample.String()}",
                 [nameof(IManifest.Dependencies)] = new[] { originalDependency },
                 ["ExtraString"] = Sample.String(),
                 ["ExtraInt"] = Sample.Int()
@@ -112,7 +113,8 @@ namespace SMAPI.Tests.Core
             Assert.AreEqual(original[nameof(IManifest.Description)], mod.Manifest.Description, "The manifest's description doesn't match.");
             Assert.AreEqual(original[nameof(IManifest.EntryDll)], mod.Manifest.EntryDll, "The manifest's entry DLL doesn't match.");
             Assert.AreEqual(original[nameof(IManifest.MinimumApiVersion)], mod.Manifest.MinimumApiVersion?.ToString(), "The manifest's minimum API version doesn't match.");
-            Assert.AreEqual(original[nameof(IManifest.Version)]?.ToString(), mod.Manifest.Version?.ToString(), "The manifest's version doesn't match.");
+            Assert.AreEqual(original[nameof(IManifest.MinimumGameVersion)], mod.Manifest.MinimumGameVersion?.ToString(), "The manifest's minimum game version doesn't match.");
+            Assert.AreEqual(original[nameof(IManifest.Version)].ToString(), mod.Manifest.Version.ToString(), "The manifest's version doesn't match.");
 
             Assert.IsNotNull(mod.Manifest.ExtraFields, "The extra fields should not be null.");
             Assert.AreEqual(2, mod.Manifest.ExtraFields.Count, "The extra fields should contain two values.");
@@ -133,7 +135,7 @@ namespace SMAPI.Tests.Core
         [Test(Description = "Assert that validation doesn't fail if there are no mods installed.")]
         public void ValidateManifests_NoMods_DoesNothing()
         {
-            new ModResolver().ValidateManifests(Array.Empty<ModMetadata>(), apiVersion: new SemanticVersion("1.0"), getUpdateUrl: _ => null, getFileLookup: this.GetFileLookup, validateFilesExist: false);
+            new ModResolver().ValidateManifests(Array.Empty<ModMetadata>(), apiVersion: new SemanticVersion("1.0.0"), gameVersion: new SemanticVersion("1.0.0"), getUpdateUrl: _ => null, getFileLookup: this.GetFileLookup, validateFilesExist: false);
         }
 
         [Test(Description = "Assert that validation skips manifests that have already failed without calling any other properties.")]
@@ -144,7 +146,7 @@ namespace SMAPI.Tests.Core
             mock.Setup(p => p.Status).Returns(ModMetadataStatus.Failed);
 
             // act
-            new ModResolver().ValidateManifests(new[] { mock.Object }, apiVersion: new SemanticVersion("1.0"), getUpdateUrl: _ => null, getFileLookup: this.GetFileLookup, validateFilesExist: false);
+            new ModResolver().ValidateManifests(new[] { mock.Object }, apiVersion: new SemanticVersion("1.0.0"), gameVersion: new SemanticVersion("1.0.0"), getUpdateUrl: _ => null, getFileLookup: this.GetFileLookup, validateFilesExist: false);
 
             // assert
             mock.VerifyGet(p => p.Status, Times.Once, "The validation did not check the manifest status.");
@@ -161,7 +163,7 @@ namespace SMAPI.Tests.Core
             });
 
             // act
-            new ModResolver().ValidateManifests(new[] { mock.Object }, apiVersion: new SemanticVersion("1.0"), getUpdateUrl: _ => null, getFileLookup: this.GetFileLookup, validateFilesExist: false);
+            new ModResolver().ValidateManifests(new[] { mock.Object }, apiVersion: new SemanticVersion("1.0.0"), gameVersion: new SemanticVersion("1.0.0"), getUpdateUrl: _ => null, getFileLookup: this.GetFileLookup, validateFilesExist: false);
 
             // assert
             mock.Verify(p => p.SetStatus(ModMetadataStatus.Failed, It.IsAny<ModFailReason>(), It.IsAny<string>(), It.IsAny<string>()), Times.Once, "The validation did not fail the metadata.");
@@ -175,7 +177,21 @@ namespace SMAPI.Tests.Core
             mock.Setup(p => p.Manifest).Returns(this.GetManifest(minimumApiVersion: "1.1"));
 
             // act
-            new ModResolver().ValidateManifests(new[] { mock.Object }, apiVersion: new SemanticVersion("1.0"), getUpdateUrl: _ => null, getFileLookup: this.GetFileLookup, validateFilesExist: false);
+            new ModResolver().ValidateManifests(new[] { mock.Object }, apiVersion: new SemanticVersion("1.0.0"), gameVersion: new SemanticVersion("1.0.0"), getUpdateUrl: _ => null, getFileLookup: this.GetFileLookup, validateFilesExist: false);
+
+            // assert
+            mock.Verify(p => p.SetStatus(ModMetadataStatus.Failed, It.IsAny<ModFailReason>(), It.IsAny<string>(), It.IsAny<string>()), Times.Once, "The validation did not fail the metadata.");
+        }
+
+        [Test(Description = "Assert that validation fails when the minimum game version is higher than the current Stardew Valley version.")]
+        public void ValidateManifests_MinimumGameVersion_Fails()
+        {
+            // arrange
+            Mock<IModMetadata> mock = this.GetMetadata("Mod A", Array.Empty<string>(), allowStatusChange: true);
+            mock.Setup(p => p.Manifest).Returns(this.GetManifest(minimumGameVersion: "1.6.9"));
+
+            // act
+            new ModResolver().ValidateManifests(new[] { mock.Object }, apiVersion: new SemanticVersion("1.0.0"), gameVersion: new SemanticVersion("1.0.0"), getUpdateUrl: _ => null, getFileLookup: this.GetFileLookup, validateFilesExist: false);
 
             // assert
             mock.Verify(p => p.SetStatus(ModMetadataStatus.Failed, It.IsAny<ModFailReason>(), It.IsAny<string>(), It.IsAny<string>()), Times.Once, "The validation did not fail the metadata.");
@@ -190,7 +206,7 @@ namespace SMAPI.Tests.Core
             Directory.CreateDirectory(directoryPath);
 
             // act
-            new ModResolver().ValidateManifests(new[] { mock.Object }, apiVersion: new SemanticVersion("1.0"), getUpdateUrl: _ => null, getFileLookup: this.GetFileLookup);
+            new ModResolver().ValidateManifests(new[] { mock.Object }, apiVersion: new SemanticVersion("1.0.0"), gameVersion: new SemanticVersion("1.0.0"), getUpdateUrl: _ => null, getFileLookup: this.GetFileLookup);
 
             // assert
             mock.Verify(p => p.SetStatus(ModMetadataStatus.Failed, It.IsAny<ModFailReason>(), It.IsAny<string>(), It.IsAny<string>()), Times.Once, "The validation did not fail the metadata.");
@@ -207,7 +223,7 @@ namespace SMAPI.Tests.Core
             Mock<IModMetadata> modB = this.GetMetadata(this.GetManifest(id: "Mod A", name: "Mod B", version: "1.0"), allowStatusChange: true);
 
             // act
-            new ModResolver().ValidateManifests(new[] { modA.Object, modB.Object }, apiVersion: new SemanticVersion("1.0"), getUpdateUrl: _ => null, getFileLookup: this.GetFileLookup, validateFilesExist: false);
+            new ModResolver().ValidateManifests(new[] { modA.Object, modB.Object }, apiVersion: new SemanticVersion("1.0.0"), gameVersion: new SemanticVersion("1.0.0"), getUpdateUrl: _ => null, getFileLookup: this.GetFileLookup, validateFilesExist: false);
 
             // assert
             modA.Verify(p => p.SetStatus(ModMetadataStatus.Failed, ModFailReason.Duplicate, It.IsAny<string>(), It.IsAny<string>()), Times.AtLeastOnce, "The validation did not fail the first mod with a unique ID.");
@@ -233,7 +249,7 @@ namespace SMAPI.Tests.Core
             mock.Setup(p => p.DirectoryPath).Returns(modFolder);
 
             // act
-            new ModResolver().ValidateManifests(new[] { mock.Object }, apiVersion: new SemanticVersion("1.0"), getUpdateUrl: _ => null, getFileLookup: this.GetFileLookup);
+            new ModResolver().ValidateManifests(new[] { mock.Object }, apiVersion: new SemanticVersion("1.0.0"), gameVersion: new SemanticVersion("1.0.0"), getUpdateUrl: _ => null, getFileLookup: this.GetFileLookup);
 
             // assert
             // if Moq doesn't throw a method-not-setup exception, the validation didn't override the status.
@@ -497,8 +513,9 @@ namespace SMAPI.Tests.Core
         /// <param name="entryDll">The <see cref="IManifest.EntryDll"/> value, or <c>null</c> for a generated value.</param>
         /// <param name="contentPackForID">The <see cref="IManifest.ContentPackFor"/> value.</param>
         /// <param name="minimumApiVersion">The <see cref="IManifest.MinimumApiVersion"/> value.</param>
+        /// <param name="minimumGameVersion">The <see cref="IManifest.MinimumGameVersion"/> value.</param>
         /// <param name="dependencies">The <see cref="IManifest.Dependencies"/> value.</param>
-        private Manifest GetManifest(string? id = null, string? name = null, string? version = null, string? entryDll = null, string? contentPackForID = null, string? minimumApiVersion = null, IManifestDependency[]? dependencies = null)
+        private Manifest GetManifest(string? id = null, string? name = null, string? version = null, string? entryDll = null, string? contentPackForID = null, string? minimumApiVersion = null, string? minimumGameVersion = null, IManifestDependency[]? dependencies = null)
         {
             return new Manifest(
                 uniqueId: id ?? $"{Sample.String()}.{Sample.String()}",
@@ -509,6 +526,7 @@ namespace SMAPI.Tests.Core
                 entryDll: entryDll ?? $"{Sample.String()}.dll",
                 contentPackFor: contentPackForID != null ? new ManifestContentPackFor(contentPackForID, null) : null,
                 minimumApiVersion: minimumApiVersion != null ? new SemanticVersion(minimumApiVersion) : null,
+                minimumGameVersion: minimumGameVersion != null ? new SemanticVersion(minimumGameVersion) : null,
                 dependencies: dependencies ?? Array.Empty<IManifestDependency>(),
                 updateKeys: Array.Empty<string>()
             );
