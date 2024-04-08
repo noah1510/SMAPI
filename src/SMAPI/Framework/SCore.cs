@@ -1812,7 +1812,7 @@ namespace StardewModdingAPI.Framework
         /// <param name="suppressUpdateChecks">The mod IDs to ignore when validating update keys.</param>
         /// <param name="failReason">The reason the mod couldn't be loaded, if applicable.</param>
         /// <param name="errorReasonPhrase">The user-facing reason phrase explaining why the mod couldn't be loaded (if applicable).</param>
-        /// <param name="errorDetails">More detailed details about the error intended for developers (if any).</param>
+        /// <param name="errorDetails">More detailed info about the error intended for developers (if any).</param>
         /// <returns>Returns whether the mod was successfully loaded.</returns>
         private bool TryLoadMod(IModMetadata mod, IModMetadata[] mods, AssemblyLoader assemblyLoader, IInterfaceProxyFactory proxyFactory, JsonHelper jsonHelper, ContentCoordinator contentCore, ModDatabase modDatabase, HashSet<string> suppressUpdateChecks, [NotNullWhen(false)] out ModFailReason? failReason, out string? errorReasonPhrase, out string? errorDetails)
         {
@@ -1827,7 +1827,7 @@ namespace StardewModdingAPI.Framework
                 else if (mod.Manifest?.EntryDll != null)
                     this.Monitor.Log($"   {mod.DisplayName} (from {relativePath}{Path.DirectorySeparatorChar}{mod.Manifest.EntryDll}, ID: {mod.Manifest.UniqueID})..."); // don't use Path.Combine here, since EntryDLL might not be valid
                 else
-                    this.Monitor.Log($"   {mod.DisplayName} (from {relativePath}, ID: {mod.Manifest!.UniqueID})...");
+                    this.Monitor.Log($"   {mod.DisplayName} (from {relativePath}, ID: {mod.Manifest?.UniqueID ?? "<unknown>"})...");
             }
 
             // add warning for missing update key
