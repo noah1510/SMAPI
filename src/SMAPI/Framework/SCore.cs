@@ -429,7 +429,7 @@ namespace StardewModdingAPI.Framework
                 mods = mods.Where(p => !p.IsIgnored).ToArray();
 
                 // validate manifests
-                resolver.ValidateManifests(mods, Constants.ApiVersion, toolkit.GetUpdateUrl, getFileLookup: this.GetFileLookup);
+                resolver.ValidateManifests(mods, Constants.ApiVersion, Constants.GameVersion, toolkit.GetUpdateUrl, getFileLookup: this.GetFileLookup);
 
                 // apply load order customizations
                 if (this.Settings.ModsToLoadEarly.Any() || this.Settings.ModsToLoadLate.Any())

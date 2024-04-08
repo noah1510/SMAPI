@@ -1,6 +1,10 @@
 ← [README](README.md)
 
 # Release notes
+## Upcoming release
+* For mod authors:
+  * Added optional `MinimumGameVersion` manifest field.
+
 ## 4.0.5
 Released 06 April 2024 for Stardew Valley 1.6.0 or later.
 

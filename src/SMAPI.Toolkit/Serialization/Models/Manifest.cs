@@ -7,45 +7,48 @@ using StardewModdingAPI.Toolkit.Serialization.Converters;
 
 namespace StardewModdingAPI.Toolkit.Serialization.Models
 {
-    /// <summary>A manifest which describes a mod for SMAPI.</summary>
+    /// <inheritdoc cref="IManifest" />
     public class Manifest : IManifest
     {
         /*********
         ** Accessors
         *********/
-        /// <summary>The mod name.</summary>
+        /// <inheritdoc />
         public string Name { get; }
 
-        /// <summary>A brief description of the mod.</summary>
+        /// <inheritdoc />
         public string Description { get; }
 
-        /// <summary>The mod author's name.</summary>
+        /// <inheritdoc />
         public string Author { get; }
 
-        /// <summary>The mod version.</summary>
+        /// <inheritdoc />
         public ISemanticVersion Version { get; }
 
-        /// <summary>The minimum SMAPI version required by this mod, if any.</summary>
+        /// <inheritdoc />
         public ISemanticVersion? MinimumApiVersion { get; }
 
-        /// <summary>The name of the DLL in the directory that has the <c>Entry</c> method. Mutually exclusive with <see cref="ContentPackFor"/>.</summary>
+        /// <inheritdoc />
+        public ISemanticVersion? MinimumGameVersion { get; }
+
+        /// <inheritdoc />
         public string? EntryDll { get; }
 
-        /// <summary>The mod which will read this as a content pack. Mutually exclusive with <see cref="Manifest.EntryDll"/>.</summary>
+        /// <inheritdoc />
         [JsonConverter(typeof(ManifestContentPackForConverter))]
         public IManifestContentPackFor? ContentPackFor { get; }
 
-        /// <summary>The other mods that must be loaded before this mod.</summary>
+        /// <inheritdoc />
         [JsonConverter(typeof(ManifestDependencyArrayConverter))]
         public IManifestDependency[] Dependencies { get; }
 
-        /// <summary>The namespaced mod IDs to query for updates (like <c>Nexus:541</c>).</summary>
+        /// <inheritdoc />
         public string[] UpdateKeys { get; private set; }
 
-        /// <summary>The unique mod ID.</summary>
+        /// <inheritdoc />
         public string UniqueID { get; }
 
-        /// <summary>Any manifest fields which didn't match a valid field.</summary>
+        /// <inheritdoc />
         [JsonExtensionData]
         public IDictionary<string, object> ExtraFields { get; } = new Dictionary<string, object>();
 
@@ -68,6 +71,7 @@ namespace StardewModdingAPI.Toolkit.Serialization.Models
                 description: description,
                 version: version,
                 minimumApiVersion: null,
+                minimumGameVersion: null,
                 entryDll: null,
                 contentPackFor: contentPackFor != null
                     ? new ManifestContentPackFor(contentPackFor, null)
@@ -84,12 +88,13 @@ namespace StardewModdingAPI.Toolkit.Serialization.Models
         /// <param name="description">A brief description of the mod.</param>
         /// <param name="version">The mod version.</param>
         /// <param name="minimumApiVersion">The minimum SMAPI version required by this mod, if any.</param>
+        /// <param name="minimumGameVersion">The minimum Stardew Valley version required by this mod, if any.</param>
         /// <param name="entryDll">The name of the DLL in the directory that has the <c>Entry</c> method. Mutually exclusive with <see cref="ContentPackFor"/>.</param>
         /// <param name="contentPackFor">The modID which will read this as a content pack.</param>
         /// <param name="dependencies">The other mods that must be loaded before this mod.</param>
         /// <param name="updateKeys">The namespaced mod IDs to query for updates (like <c>Nexus:541</c>).</param>
         [JsonConstructor]
-        public Manifest(string uniqueId, string name, string author, string description, ISemanticVersion version, ISemanticVersion? minimumApiVersion, string? entryDll, IManifestContentPackFor? contentPackFor, IManifestDependency[]? dependencies, string[]? updateKeys)
+        public Manifest(string uniqueId, string name, string author, string description, ISemanticVersion version, ISemanticVersion? minimumApiVersion, ISemanticVersion? minimumGameVersion, string? entryDll, IManifestContentPackFor? contentPackFor, IManifestDependency[]? dependencies, string[]? updateKeys)
         {
             this.UniqueID = this.NormalizeField(uniqueId);
             this.Name = this.NormalizeField(name, replaceSquareBrackets: true);
@@ -97,6 +102,7 @@ namespace StardewModdingAPI.Toolkit.Serialization.Models
             this.Description = this.NormalizeField(description);
             this.Version = version;
             this.MinimumApiVersion = minimumApiVersion;
+            this.MinimumGameVersion = minimumGameVersion;
             this.EntryDll = this.NormalizeField(entryDll);
             this.ContentPackFor = contentPackFor;
             this.Dependencies = dependencies ?? Array.Empty<IManifestDependency>();
