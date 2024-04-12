@@ -20,7 +20,8 @@ Released 07 April 2024 for Stardew Valley 1.6.0 or later.
 Released 06 April 2024 for Stardew Valley 1.6.0 or later.
 
 * For players:
-  * The installer now deletes obsolete files from very old SMAPI versions again.
+  * Updated for Stardew Valley 1.6.4. **This drops compatibility with Stardew Valley 1.6.0–1.6.3.**
+  * The installer now deletes obsolete files from very old SMAPI versions again. (This was removed in SMAPI 4.0, but many players still had very old versions.)
   * The installer now deletes Error Handler automatically if it's at the default path.
   * Fixed mods sometimes not applying logic inside new buildings.
   * Minor optimizations.

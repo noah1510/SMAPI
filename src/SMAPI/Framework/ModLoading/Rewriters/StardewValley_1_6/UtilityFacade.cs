@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Reflection;
 using Microsoft.Xna.Framework;
 using StardewModdingAPI.Framework.ModLoading.Framework;
 using StardewValley;
@@ -45,30 +44,6 @@ namespace StardewModdingAPI.Framework.ModLoading.Rewriters.StardewValley_1_6
                 action(location);
                 return true;
             });
-        }
-
-        public new static void ForEachCharacter(Func<NPC, bool> action, bool includeEventActors = false)
-        {
-            // Stardew Valley 1.6.3 added an optional parameter to ForEachCharacter, so mods compiled in 1.6.3 won't
-            // run in 1.6.2 and earlier. We can't just call the method directly either since SMAPI itself is compiled
-            // for 1.6.3+ too.
-
-            MethodInfo method =
-                typeof(Utility).GetMethod(nameof(Utility.ForEachCharacter))
-                ?? throw new InvalidOperationException($"Can't find method {nameof(Utility)}.{nameof(Utility.ForEachCharacter)} for compatibility rewrite.");
-            method.Invoke(null, new object[] { action });
-        }
-
-        public new static void ForEachVillager(Func<NPC, bool> action, bool includeEventActors = false)
-        {
-            // Stardew Valley 1.6.3 added an optional parameter to ForEachVillager, so mods compiled in 1.6.3 won't
-            // run in 1.6.2 and earlier. We can't just call the method directly either since SMAPI itself is compiled
-            // for 1.6.3+ too.
-
-            MethodInfo method =
-                typeof(Utility).GetMethod(nameof(Utility.ForEachVillager))
-                ?? throw new InvalidOperationException($"Can't find method {nameof(Utility)}.{nameof(Utility.ForEachVillager)} for compatibility rewrite.");
-            method.Invoke(null, new object[] { action });
         }
 
         public new static DisposableList<NPC> getAllCharacters()
