@@ -6,6 +6,7 @@ Released 07 April 2024 for Stardew Valley 1.6.0 or later.
 
 * For player:
   * The SMAPI log file now includes installed mod IDs, to help with troubleshooting (thanks to DecidedlyHuman!).
+  * Fixed installer not detecting 1.6 compatibility branch.
 
 * For mod authors:
   * Added optional [`MinimumGameVersion` manifest field](https://stardewvalleywiki.com/Modding:Modder_Guide/APIs/Manifest#Minimum_SMAPI_or_game_version).

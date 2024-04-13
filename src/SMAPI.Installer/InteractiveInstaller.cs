@@ -700,8 +700,8 @@ namespace StardewModdingApi.Installer
                     case GameFolderType.Valid:
                         return dir;
 
-                    case GameFolderType.Legacy154OrEarlier:
-                        this.PrintWarning($"{errorPrefix} that directory seems to have Stardew Valley 1.5.4 or earlier.");
+                    case GameFolderType.LegacyVersion:
+                        this.PrintWarning($"{errorPrefix} that directory seems to have Stardew Valley 1.5.6 or earlier.");
                         this.PrintWarning("Please update your game to the latest version to use SMAPI.");
                         return null;
 
@@ -783,8 +783,8 @@ namespace StardewModdingApi.Installer
                         this.PrintInfo("   OK!");
                         return directory;
 
-                    case GameFolderType.Legacy154OrEarlier:
-                        this.PrintWarning("That directory seems to have Stardew Valley 1.5.4 or earlier.");
+                    case GameFolderType.LegacyVersion:
+                        this.PrintWarning("That directory seems to have Stardew Valley 1.5.6 or earlier.");
                         this.PrintWarning("Please update your game to the latest version to use SMAPI.");
                         continue;
 
