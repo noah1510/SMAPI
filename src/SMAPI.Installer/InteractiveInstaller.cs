@@ -766,9 +766,9 @@ namespace StardewModdingApi.Installer
                 }
 
                 // get directory
-                if (File.Exists(path))
-                    path = Path.GetDirectoryName(path)!;
                 DirectoryInfo directory = new(path);
+                if (!directory.Exists && (path.EndsWith(".dll") || path.EndsWith(".exe") || File.Exists(path)) && directory.Parent is { Exists: true })
+                    directory = directory.Parent;
 
                 // validate path
                 if (!directory.Exists)
