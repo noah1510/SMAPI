@@ -41,6 +41,17 @@ namespace StardewModdingAPI.Toolkit.Framework.GameScanning
         /// <remarks>This checks default game locations, and on Windows checks the Windows registry for GOG/Steam install data. A folder is considered 'valid' if it contains the Stardew Valley executable for the current OS.</remarks>
         public IEnumerable<DirectoryInfo> Scan()
         {
+            foreach ((DirectoryInfo folder, GameFolderType type) in this.ScanIncludingInvalid())
+            {
+                if (type is GameFolderType.Valid)
+                    yield return folder;
+            }
+        }
+
+        /// <summary>Find all valid Stardew Valley install folders.</summary>
+        /// <remarks>This checks default game locations, and on Windows checks the Windows registry for GOG/Steam install data. A folder is considered 'valid' if it contains the Stardew Valley executable for the current OS.</remarks>
+        public IEnumerable<(DirectoryInfo, GameFolderType)> ScanIncludingInvalid()
+        {
             // get install paths
             IEnumerable<string> paths = this
                 .GetCustomInstallPaths()
@@ -52,16 +63,9 @@ namespace StardewModdingAPI.Toolkit.Framework.GameScanning
             foreach (string path in paths)
             {
                 DirectoryInfo folder = new(path);
-                if (this.LooksLikeGameFolder(folder))
-                    yield return folder;
+                if (folder.Exists)
+                    yield return (folder, this.GetGameFolderType(folder));
             }
-        }
-
-        /// <summary>Get whether a folder seems to contain the game.</summary>
-        /// <param name="dir">The folder to check.</param>
-        public bool LooksLikeGameFolder(DirectoryInfo dir)
-        {
-            return this.GetGameFolderType(dir) == GameFolderType.Valid;
         }
 
         /// <summary>Detect the validity of a game folder based on file structure heuristics.</summary>

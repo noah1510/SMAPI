@@ -4,13 +4,17 @@
 ## 4.0.6
 Released 07 April 2024 for Stardew Valley 1.6.0 or later.
 
-* For player:
+* For players:
   * The SMAPI log file now includes installed mod IDs, to help with troubleshooting (thanks to DecidedlyHuman!).
+  * The installer now lists detected game folders with an incompatible version to simplify troubleshooting.
   * Fixed installer not detecting 1.6 compatibility branch.
   * When the installer asks for a game folder path, entering an incorrect path to a file inside it will now still select the folder.
 
 * For mod authors:
   * Added optional [`MinimumGameVersion` manifest field](https://stardewvalleywiki.com/Modding:Modder_Guide/APIs/Manifest#Minimum_SMAPI_or_game_version).
+
+* For external tool authors:
+  * In the SMAPI toolkit, added a new `GetGameFoldersIncludingInvalid()` method to get all detected game folders and their validity type.
 
 ## 4.0.5
 Released 06 April 2024 for Stardew Valley 1.6.0 or later.
