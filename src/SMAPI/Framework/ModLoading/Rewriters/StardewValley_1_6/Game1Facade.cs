@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.Xna.Framework;
@@ -116,9 +117,24 @@ namespace StardewModdingAPI.Framework.ModLoading.Rewriters.StardewValley_1_6
             Game1.drawObjectQuestionDialogue(dialogue, choices?.ToArray());
         }
 
-        public static NPC getCharacterFromName(string name, bool mustBeVillager = true, bool useLocationsListOnly = false)
+        public new static NPC? getCharacterFromName(string name, bool mustBeVillager = true)
         {
             return Game1.getCharacterFromName(name, mustBeVillager);
+        }
+
+        public static T? getCharacterFromName<T>(string name, bool mustBeVillager = true) where T : NPC
+        {
+            return Game1.getCharacterFromName<T>(name, mustBeVillager);
+        }
+
+        public static T? GetCharacterOfType<T>() where T : NPC
+        {
+            return Game1.GetCharacterOfType<T>();
+        }
+
+        public static T? GetCharacterWhere<T>(Func<T, bool> check) where T : NPC
+        {
+            return Game1.GetCharacterWhere(check);
         }
 
         public static int getModeratelyDarkTime()

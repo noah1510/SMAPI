@@ -54,6 +54,13 @@ namespace StardewModdingAPI.Toolkit
             return new GameScanner().Scan();
         }
 
+        /// <summary>Find all default Stardew Valley install folders which exist, regardless of whether they're valid.</summary>
+        /// <remarks>This checks default game locations, and on Windows checks the Windows registry for GOG/Steam install data.</remarks>
+        public IEnumerable<(DirectoryInfo, GameFolderType)> GetGameFoldersIncludingInvalid()
+        {
+            return new GameScanner().ScanIncludingInvalid();
+        }
+
         /// <summary>Extract mod metadata from the wiki compatibility list.</summary>
         public async Task<WikiModList> GetWikiCompatibilityListAsync()
         {
