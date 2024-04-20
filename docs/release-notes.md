@@ -3,6 +3,8 @@
 # Release notes
 ## Upcoming release
 * For players:
+  * Added option to disable Harmony/MonoMod fix for players with certain crashes.  
+    _This should only be changed if no installed mods use Harmony._
   * Fixed split-screen crash for non-English players when mods added translated variants of content assets.
   * SMAPI no longer rewrites mods which use Harmony 1.x, to help reduce Harmony crashes.  
     _This should affect very few mods that still work otherwise, and any Harmony mod updated after July 2021 should be unaffected._
