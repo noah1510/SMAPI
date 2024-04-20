@@ -1,6 +1,11 @@
 ← [README](README.md)
 
 # Release notes
+## Upcoming release
+* For players:
+  * SMAPI no longer rewrites mods which use Harmony 1.x, to help reduce Harmony crashes.  
+    _This should affect very few mods that still work otherwise, and any Harmony mod updated after July 2021 should be unaffected._
+
 ## 4.0.7
 Released 18 April 2024 for Stardew Valley 1.6.4 or later.
 
