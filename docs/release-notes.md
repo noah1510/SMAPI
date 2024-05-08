@@ -4,6 +4,10 @@
 ## Upcoming release
 * For players:
   * Fixed pickled forage not shown by `list_items` console command.
+  * Fixed content issues for non-English players in recent builds (e.g. content packs not detecting the current festival correctly).
+
+* For mod authors:
+  * Fixed `content.Load` ignoring language override in recent SMAPI builds.
 
 * For the web UI:
   * Fixed the log parser showing the wrong game folder path if the `Mods` folder path was customized.
