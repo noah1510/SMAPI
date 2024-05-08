@@ -7,6 +7,7 @@
 
 * For the web UI:
   * Fixed the log parser showing the wrong game folder path if the `Mods` folder path was customized.
+  * Fixed JSON validator for Content Patcher showing strict errors for some `Entries`, `Fields`, or `When` field types.
 
 ## 4.0.8
 Released 21 April 2024 for Stardew Valley 1.6.4 or later.
