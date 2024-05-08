@@ -3,8 +3,9 @@
 # Release notes
 ## Upcoming release
 * For players:
-  * Fixed pickled forage not shown by `list_items` console command.
+  * Fixed installer not detecting Linux Flatpak install paths.
   * Fixed content issues for non-English players in recent builds (e.g. content packs not detecting the current festival correctly).
+  * Fixed pickled forage not shown by `list_items` console command.
 
 * For mod authors:
   * Fixed `content.Load` ignoring language override in recent SMAPI builds.
