@@ -14,7 +14,8 @@
   * Fixed the log parser showing the wrong game folder path if the `Mods` folder path was customized.
   * Fixed JSON validator for Content Patcher showing incorrect errors for..
     * some valid `Entries`, `Fields`, and `When` field values;
-    * `CustomLocations` entries which use the new [unique string ID](https://stardewvalleywiki.com/Modding:Common_data_field_types#Unique_string_ID) format.
+    * `CustomLocations` entries which use the new [unique string ID](https://stardewvalleywiki.com/Modding:Common_data_field_types#Unique_string_ID) format;
+    * `AddWarps` warps when a location name contains a dot.
 
 ## 4.0.8
 Released 21 April 2024 for Stardew Valley 1.6.4 or later.
