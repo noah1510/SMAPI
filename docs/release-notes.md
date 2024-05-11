@@ -9,7 +9,7 @@
 
 * For mod authors:
   * Fixed `content.Load` ignoring language override in recent SMAPI builds.
-  * Fixed building paint masks not always propagated on change.
+  * Fixed player sprites and building paint masks not always propagated on change.
 
 * For the web UI:
   * Fixed the log parser showing the wrong game folder path if the `Mods` folder path was customized.
