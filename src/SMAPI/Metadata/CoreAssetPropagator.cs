@@ -489,7 +489,7 @@ namespace StardewModdingAPI.Metadata
         private bool UpdateBuildingPaintMask(IAssetName assetName)
         {
             // remove from paint mask cache
-            bool removedFromCache = BuildingPainter.paintMaskLookup.Remove(assetName.BaseName);
+            bool removedFromCache = BuildingPainter.paintMaskLookup.Remove(assetName.BaseName) | BuildingPainter.paintMaskLookup.Remove(assetName.BaseName.Replace('/', '\\'));
 
             // reload building textures
             bool anyReloaded = false;
