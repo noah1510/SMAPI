@@ -253,7 +253,7 @@
                     "Entries": {
                         "title": "Entries",
                         "description": "The entries in the data file you want to add, replace, or delete. If you only want to change a few fields, use Fields instead for best compatibility with other mods. To add an entry, just specify a key that doesn't exist; to delete an entry, set the value to null (like \"some key\": null). This field supports tokens in entry keys and values.\nCaution: some XNB files have extra fields at the end for translations; when adding or replacing an entry for all locales, make sure you include the extra fields to avoid errors for non-English players.",
-                        "type": "object"
+                        "type": [ "object", "null" ]
                     },
                     "MoveEntries": {
                         "title": "Move entries",
@@ -340,7 +340,7 @@
                         "description": "The map properties (not tile properties) to add, replace, or delete. To add an property, just specify a key that doesn't exist; to delete an entry, set the value to null (like \"some key\": null). This field supports tokens in property keys and values.",
                         "type": "object",
                         "additionalProperties": {
-                            "type": "string"
+                            "type": [ "string", "null" ]
                         }
                     },
                     "MapTiles": {
@@ -373,7 +373,7 @@
                                     "description": "The properties to set or remove. This is merged into the existing tile properties, if any. To remove a property, set its value to `null` (not \"null\" in quotes).",
                                     "type": "object",
                                     "additionalProperties": {
-                                        "type": "string"
+                                        "type": [ "string", "null" ]
                                     }
                                 },
                                 "Remove": {
